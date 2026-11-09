@@ -1,0 +1,21 @@
+# Dependências e arquivos gerados
+node_modules/
+dist/
+dist-ssr/
+.vercel/
+
+# Variáveis de ambiente: a chave Pix e outros dados ficam fora do código.
+# Só o modelo (.env.example) vai para o repositório.
+.env
+.env.*
+!.env.example
+*.local
+
+# Configuração pessoal do editor/ferramenta
+.claude/settings.local.json
+
+# Logs e arquivos do sistema
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
