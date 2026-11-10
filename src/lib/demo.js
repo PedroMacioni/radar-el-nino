@@ -2,7 +2,7 @@
 // Funcionam sem internet e não mexem em nada salvo no aparelho.
 import { RAIN_STEP, buildRainGrid, distanceKm } from './map.js'
 
-export const DEMO_PLACE = { id: 'demo', name: 'Campinas', state: 'São Paulo', lat: -22.9, lon: -47.06 }
+export const DEMO_PLACE = { id: 'demo', name: 'São Paulo', state: 'São Paulo', lat: -23.55, lon: -46.63 }
 
 export function isDemoRoute(pathname = typeof window !== 'undefined' ? window.location.pathname : '') {
   return /^\/teste(\/(vermelho|laranja|amarelo|extremo))?\/?$/.test(pathname)
