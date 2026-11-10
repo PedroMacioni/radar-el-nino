@@ -9,6 +9,12 @@ const STATE_BY_UF = {
   SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins',
 }
 
+// Coordenadas para a nossa API: 3 casas (~110 m) bastam e fazem pedidos próximos repetirem o
+// mesmo endereço, o que deixa o cache da hospedagem funcionar (um GPS manda 15 casas).
+export function coordsQuery(lat, lon) {
+  return `lat=${(Math.round(lat * 1000) / 1000).toFixed(3)}&lon=${(Math.round(lon * 1000) / 1000).toFixed(3)}`
+}
+
 export function isCep(text) {
   return /^\d{5}-?\d{3}$/.test(text.trim())
 }
@@ -63,7 +69,8 @@ export function placeLabel(place) {
 // Se falhar, devolve null e o app usa "Minha localização".
 export async function reverseGeocode(lat, lon, fetchImpl = fetch) {
   try {
-    const params = new URLSearchParams({ latitude: String(lat), longitude: String(lon), localityLanguage: 'pt' })
+    // Só a cidade interessa: 2 casas (~1 km) evitam mandar o ponto exato ao serviço de terceiros.
+    const params = new URLSearchParams({ latitude: lat.toFixed(2), longitude: lon.toFixed(2), localityLanguage: 'pt' })
     const response = await fetchImpl(`https://api.bigdatacloud.net/data/reverse-geocode-client?${params}`)
     if (!response.ok) return null
     const data = await response.json()

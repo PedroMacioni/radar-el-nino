@@ -1,9 +1,8 @@
 // Dados do mapa: áreas de aviso do INMET e focos de calor do INPE perto de um ponto.
 // Usada pela função serverless (api/mapa.js) e pelo servidor de desenvolvimento (vite.config.js).
-import { INMET_ACTIVE_URL, normalizeWarning, parseCoordinates, parseGeometry, pointInGeometry } from './alerts.js'
+import { INMET_ACTIVE_URL, SEVERITY_ORDER, normalizeWarning, parseCoordinates, parseGeometry, pointInGeometry } from './alerts.js'
 import { listFires, loadFiresCsv } from './queimadas.js'
 
-const SEVERITY_ORDER = { vermelho: 0, laranja: 1, amarelo: 2, desconhecido: 3 }
 // Só entram avisos cujas áreas chegam a ~550 km do ponto.
 const NEAR_DEGREES = 5
 const MAX_AREAS = 30
@@ -137,9 +136,18 @@ export async function handleMap(query, fetchImpl = fetch, now = new Date()) {
     loadFiresCsv(fetchImpl, now),
   ])
 
-  const areas = alertsResult.status === 'fulfilled' ? areasNear(alertsResult.value, point.lat, point.lon) : null
+  // Cada fonte falha sozinha: um item malformado do INMET não pode derrubar os focos do INPE.
+  const attempt = (work) => {
+    try {
+      return work()
+    } catch (error) {
+      console.error('Falha ao montar os dados do mapa:', error)
+      return null
+    }
+  }
+  const areas = alertsResult.status === 'fulfilled' ? attempt(() => areasNear(alertsResult.value, point.lat, point.lon)) : null
   const loaded = firesResult.status === 'fulfilled' ? firesResult.value : null
-  const points = loaded ? listFires(loaded.csv, point.lat, point.lon, FIRE_RADIUS_KM, MAX_FIRES) : null
+  const points = loaded ? attempt(() => listFires(loaded.csv, point.lat, point.lon, FIRE_RADIUS_KM, MAX_FIRES)) : null
 
   if (areas == null && points == null) {
     return { status: 502, body: { error: 'Não foi possível consultar os dados do mapa agora.' } }

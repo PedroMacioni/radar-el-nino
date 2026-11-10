@@ -85,11 +85,17 @@ export async function handleReservoirs(query, fetchImpl = fetch, now = new Date(
   if (!id) return { status: 404, body: { error: 'Estado não reconhecido' } }
   const year = now.getUTCFullYear()
   try {
+    // No começo do ano o arquivo novo pode não existir ou ter poucos dias: o ano anterior completa
+    // a leitura (e a comparação de 7 dias). Só falha se nenhum dos dois puder ser lido.
     const [current, previous] = await Promise.all([
-      loadYear(year, fetchImpl),
+      loadYear(year, fetchImpl).catch(() => ''),
       loadYear(year - 1, fetchImpl).catch(() => ''),
     ])
-    const summary = summarizeEar(parseEar(current, id), previous ? parseEar(previous, id) : [])
+    if (!current && !previous) throw new Error('ONS sem arquivos')
+    const previousRows = previous ? parseEar(previous, id) : []
+    // Cada arquivo traz um ano só e já vem em ordem de data, então basta juntar.
+    const rows = [...previousRows, ...(current ? parseEar(current, id) : [])]
+    const summary = summarizeEar(rows, previousRows)
     if (!summary) return { status: 502, body: { error: 'Sem dados do ONS' } }
     return {
       status: 200,

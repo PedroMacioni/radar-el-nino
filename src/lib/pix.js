@@ -29,8 +29,16 @@ export function cleanText(text, max) {
 }
 
 // Valor opcional entre R$ 1 e R$ 10.000. Fora disso, o código vai sem valor.
+// Texto no formato brasileiro: "1.000" é mil, "1.000,50" é mil e cinquenta centavos, "35,5" é 35,50.
+function parseBrazilianNumber(text) {
+  const clean = text.replace(/^R\$\s*/i, '').replace(/\s/g, '')
+  if (clean.includes(',')) return Number(clean.replace(/\./g, '').replace(',', '.'))
+  if (/^\d{1,3}(\.\d{3})+$/.test(clean)) return Number(clean.replace(/\./g, ''))
+  return Number(clean)
+}
+
 export function normalizeAmount(amount) {
-  const value = typeof amount === 'string' ? Number(amount.replace(',', '.')) : amount
+  const value = typeof amount === 'string' ? (amount.trim() === '' ? NaN : parseBrazilianNumber(amount)) : amount
   if (!Number.isFinite(value) || value < 1 || value > 10000) return null
   return Math.round(value * 100) / 100
 }

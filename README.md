@@ -105,6 +105,10 @@ public/          ícones do app instalado
 tests/           testes (node --test)
 ```
 
+## Privacidade
+
+O app não tem conta, banco de dados nem rastreadores. A cidade escolhida e a última previsão ficam só no `localStorage` do seu navegador. Para funcionar, as coordenadas da cidade (arredondadas) são enviadas à Open-Meteo e ao nosso servidor, que consulta INMET, INPE e ONS. Se você usar "Usar minha localização", o ponto vai arredondado a cerca de 1 km à BigDataCloud, só para descobrir o nome da cidade.
+
 ## Limitações conhecidas
 
 - O endpoint de avisos do INMET (`apiprevmet3.inmet.gov.br/avisos/ativos`) não tem documentação pública. Quando o aviso não traz o nível de severidade em `severidade`, `nivel` ou `cor`, o app mostra "Aviso do INMET" em cinza e aponta para o portal oficial. A normalização está em `server/alerts.js`.

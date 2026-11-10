@@ -1,6 +1,8 @@
+import { coordsQuery } from './geo.js'
+
 // Chama a rota /api/alertas (função serverless ou servidor de desenvolvimento).
 export async function fetchAlerts(lat, lon, fetchImpl = fetch) {
-  const response = await fetchImpl(`/api/alertas?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`)
+  const response = await fetchImpl(`/api/alertas?${coordsQuery(lat, lon)}`)
   if (!response.ok) throw new Error(`Avisos respondeu ${response.status}`)
   const data = await response.json()
   return data.warnings || []

@@ -1,3 +1,5 @@
+import { coordsQuery } from './geo.js'
+
 // Rios (vazão prevista) e queimadas (focos de calor) perto do local.
 
 const FLOOD_URL = 'https://flood-api.open-meteo.com/v1/flood'
@@ -16,7 +18,7 @@ export async function fetchRiver(lat, lon, fetchImpl = fetch) {
 }
 
 export async function fetchFires(lat, lon, fetchImpl = fetch) {
-  const response = await fetchImpl(`/api/queimadas?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`)
+  const response = await fetchImpl(`/api/queimadas?${coordsQuery(lat, lon)}`)
   if (!response.ok) throw new Error(`Queimadas respondeu ${response.status}`)
   return response.json()
 }

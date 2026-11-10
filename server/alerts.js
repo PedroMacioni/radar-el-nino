@@ -58,7 +58,7 @@ export function severityFromRaw(raw) {
   return 'desconhecido'
 }
 
-const SEVERITY_ORDER = { vermelho: 0, laranja: 1, amarelo: 2, desconhecido: 3 }
+export const SEVERITY_ORDER = { vermelho: 0, laranja: 1, amarelo: 2, desconhecido: 3 }
 
 export function normalizeWarning(raw, when) {
   const title = raw.descricao || raw.fenomeno || raw.nome || raw.titulo || null
@@ -87,6 +87,8 @@ export function warningsForPoint(data, lat, lon) {
 }
 
 export function parseCoordinates(query) {
+  // Number('') vale 0: texto vazio não pode virar o ponto 0,0.
+  if (String(query.lat ?? '').trim() === '' || String(query.lon ?? '').trim() === '') return null
   const lat = Number(query.lat)
   const lon = Number(query.lon)
   const valid = Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
@@ -107,6 +109,7 @@ export async function handleAlerts(query, fetchImpl = fetch) {
       body: { warnings: warningsForPoint(data, point.lat, point.lon), source: 'INMET', fetchedAt: new Date().toISOString() },
     }
   } catch (error) {
-    return { status: 502, body: { error: 'Não foi possível consultar os avisos do INMET agora.', detail: String(error.message || error) } }
+    console.error('Falha ao consultar o INMET:', error)
+    return { status: 502, body: { error: 'Não foi possível consultar os avisos do INMET agora.' } }
   }
 }

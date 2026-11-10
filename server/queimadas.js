@@ -3,6 +3,8 @@
 // O arquivo diário do Brasil tem alguns MB, por isso a leitura é feita aqui e
 // o navegador recebe só a contagem (ou, no mapa, só os pontos próximos).
 
+import { parseCoordinates } from './alerts.js'
+
 export const RADIUS_KM = 50
 const BASE = 'https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil'
 
@@ -61,7 +63,7 @@ export function listFires(csv, lat, lon, radiusKm = 100, limit = 300) {
 const dayKey = (date) => `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}`
 
 // Tenta o arquivo de hoje (parcial) e, se não existir ainda, o de ontem.
-export async function loadFiresCsv(fetchImpl = fetch, now = new Date()) {
+async function downloadFiresCsv(fetchImpl, now) {
   for (const back of [0, 1]) {
     const day = dayKey(new Date(now.getTime() - back * 86400000))
     try {
@@ -75,14 +77,32 @@ export async function loadFiresCsv(fetchImpl = fetch, now = new Date()) {
   return null
 }
 
-export async function handleFires(query, fetchImpl = fetch, now = new Date()) {
-  const lat = Number(query.lat)
-  const lon = Number(query.lon)
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    return { status: 400, body: { error: 'lat e lon são obrigatórios' } }
+// O arquivo do Brasil inteiro tem vários MB e é igual para todo mundo. Cada instância guarda a
+// última cópia por 20 minutos e, enquanto uma leitura está em andamento, as outras esperam por ela.
+const CACHE_MS = 20 * 60 * 1000
+const cache = { at: 0, promise: null }
+
+export async function loadFiresCsv(fetchImpl = fetch, now = new Date()) {
+  // Só o fetch real usa o cache; nos testes, cada chamada com um fetch falso é independente.
+  if (fetchImpl !== fetch) return downloadFiresCsv(fetchImpl, now)
+  if (!cache.promise || Date.now() - cache.at > CACHE_MS) {
+    cache.at = Date.now()
+    cache.promise = downloadFiresCsv(fetchImpl, now).then((loaded) => {
+      if (!loaded) cache.promise = null
+      return loaded
+    }, (error) => {
+      cache.promise = null
+      throw error
+    })
   }
+  return cache.promise
+}
+
+export async function handleFires(query, fetchImpl = fetch, now = new Date()) {
+  const point = parseCoordinates(query)
+  if (!point) return { status: 400, body: { error: 'Informe lat e lon válidos.' } }
   const loaded = await loadFiresCsv(fetchImpl, now)
-  const result = loaded && countFires(loaded.csv, lat, lon)
+  const result = loaded && countFires(loaded.csv, point.lat, point.lon)
   if (!result) return { status: 502, body: { error: 'Não foi possível ler os focos do INPE' } }
   return {
     status: 200,

@@ -1,7 +1,8 @@
 import { formatDateTime } from './format.js'
+import { coordsQuery } from './geo.js'
 
 export async function fetchMapData(lat, lon, fetchImpl = fetch) {
-  const response = await fetchImpl(`/api/mapa?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`)
+  const response = await fetchImpl(`/api/mapa?${coordsQuery(lat, lon)}`)
   if (!response.ok) throw new Error(`Mapa respondeu ${response.status}`)
   return response.json()
 }

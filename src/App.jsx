@@ -38,6 +38,8 @@ function Home() {
   const lastRefresh = useRef(0)
   const lastFetch = useRef(Date.now())
   const seenAlerts = useRef(null)
+  // A chuva dos últimos 10 anos só muda uma vez por dia: não precisa ser baixada a cada atualização.
+  const droughtCache = useRef(null)
 
   function selectPlace(next) {
     savePlace(next)
@@ -99,9 +101,19 @@ function Home() {
     } else {
       setReservoirs({ status: 'error' })
     }
-    fetchDrought(place.lat, place.lon, new Date().toLocaleDateString('sv-SE'))
-      .then((data) => !cancelled && setDrought({ status: 'ok', data }))
-      .catch(() => !cancelled && setDrought((previous) => (previous.status === 'ok' ? previous : { status: 'error' })))
+    const today = new Date().toLocaleDateString('sv-SE')
+    const droughtKey = `${place.lat},${place.lon},${today}`
+    if (droughtCache.current?.key === droughtKey) {
+      setDrought({ status: 'ok', data: droughtCache.current.data })
+    } else {
+      fetchDrought(place.lat, place.lon, today)
+        .then((data) => {
+          if (cancelled) return
+          droughtCache.current = { key: droughtKey, data }
+          setDrought({ status: 'ok', data })
+        })
+        .catch(() => !cancelled && setDrought((previous) => (previous.status === 'ok' ? previous : { status: 'error' })))
+    }
     fetchFires(place.lat, place.lon)
       .then((data) => !cancelled && setFires({ status: 'ok', data }))
       .catch(() => !cancelled && setFires((previous) => (previous.status === 'ok' ? previous : { status: 'error' })))

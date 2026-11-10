@@ -69,3 +69,14 @@ test('nome e cidade respeitam limites e acentos', () => {
 test('sem chave não gera código', () => {
   assert.throws(() => buildPixPayload({ key: '  ', name: 'X', city: 'Y' }))
 })
+
+test('valor no formato brasileiro: ponto de milhar e vírgula decimal', () => {
+  assert.equal(normalizeAmount('1.000'), 1000)
+  assert.equal(normalizeAmount('1.500,50'), 1500.5)
+  assert.equal(normalizeAmount('35,5'), 35.5)
+  assert.equal(normalizeAmount('R$ 10.000'), 10000)
+  assert.equal(normalizeAmount('12.5'), 12.5)
+  assert.equal(normalizeAmount(''), null)
+  assert.equal(normalizeAmount('abc'), null)
+  assert.equal(normalizeAmount('10.001'), null)
+})
