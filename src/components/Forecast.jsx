@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { LuCloud, LuCloudDrizzle, LuCloudFog, LuCloudLightning, LuCloudRain, LuCloudSun, LuDroplet, LuSun } from 'react-icons/lu'
 import { buildChart, rainLevel, tempColor } from '../lib/chart.js'
-import { dayNumber, dayTitle, formatMm, formatPercent, formatTemp, weekdayShort } from '../lib/format.js'
+import { dayMonth, dayTitle, formatMm, formatPercent, formatTemp, weekdayShort } from '../lib/format.js'
+import { summarizeDay } from '../lib/daily.js'
 import { uvLevel } from '../lib/levels.js'
 import { splitPeriods } from '../lib/weather.js'
 import { useNarrow } from '../hooks.js'
@@ -13,17 +15,61 @@ function dayLabel(date, index) {
   return weekdayShort(date)
 }
 
+// Ícone do tempo de cada dia. A cor ajuda, mas o nome do tempo também está no título e no texto lido por leitor de tela.
+const WEATHER_ICON = {
+  limpo: [LuSun, '#d98c00'],
+  parcial: [LuCloudSun, '#c78a1c'],
+  nublado: [LuCloud, '#6b7a89'],
+  neblina: [LuCloudFog, '#6b7a89'],
+  garoa: [LuCloudDrizzle, '#4292c6'],
+  chuva: [LuCloudRain, '#2171b5'],
+  'chuva-forte': [LuCloudRain, '#14509c'],
+  trovoada: [LuCloudLightning, '#6a51a3'],
+}
+
 function DayTabs({ days, selected, onSelect }) {
+  const active = useRef(null)
+  const strip = useRef(null)
+  // No celular a faixa rola para o lado e o dia escolhido vem para o centro. Rola só a faixa, na
+  // horizontal: scrollIntoView também rolaria a página inteira (e escondia a busca atrás do menu).
+  useEffect(() => {
+    const card = active.current
+    const box = strip.current
+    if (!card || !box || box.scrollWidth <= box.clientWidth) return
+    const delta = card.getBoundingClientRect().left - box.getBoundingClientRect().left - (box.clientWidth - card.offsetWidth) / 2
+    box.scrollBy({ left: delta, behavior: 'smooth' })
+  }, [selected])
+
   return (
-    <div className="tabs" role="group" aria-label="Escolha o dia">
-      {days.map((day, index) => (
-        <button key={day.date} type="button" className="tabs__tab" aria-pressed={index === selected} onClick={() => onSelect(index)}>
-          <span className="tabs__label">{dayLabel(day.date, index)}</span>
-          <span className="tabs__sub mono">{weekdayShort(day.date)} {dayNumber(day.date)}</span>
-          <span className="tabs__short">{weekdayShort(day.date)}</span>
-          <span className="tabs__num mono">{dayNumber(day.date)}</span>
-        </button>
-      ))}
+    <div className="tabs" ref={strip} role="group" aria-label="Escolha o dia">
+      {days.map((day, index) => {
+        const sum = summarizeDay(day.hours)
+        const [Icon, color] = WEATHER_ICON[sum.weather]
+        const rain = sum.rainMax == null ? null : rainLevel(sum.rainMax)
+        const label = dayLabel(day.date, index)
+        const wet = sum.rainMax != null && sum.rainMax >= 50
+        return (
+          <button
+            key={day.date}
+            ref={index === selected ? active : null}
+            type="button"
+            className="daytab"
+            aria-pressed={index === selected}
+            onClick={() => onSelect(index)}
+            aria-label={`${label}, ${dayTitle(day.date)}. ${sum.weatherLabel}. Máxima ${formatTemp(sum.max)}, mínima ${formatTemp(sum.min)}. Chance de chuva ${formatPercent(sum.rainMax)}, ${formatMm(sum.rainTotal)}.`}
+          >
+            <span className="daytab__label">{label}</span>
+            <span className="daytab__date mono">{dayMonth(day.date)}</span>
+            <span className="daytab__icon" style={{ color }} title={sum.weatherLabel}><Icon size={26} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="daytab__temps mono"><b>{formatTemp(sum.max)}</b><span>{formatTemp(sum.min)}</span></span>
+            <span className={`daytab__rain mono${wet ? ' daytab__rain--wet' : ''}`}>
+              <LuDroplet size={14} strokeWidth={2.2} style={{ color: rain && sum.rainMax >= 20 ? rain.color : '#9aa7b3' }} aria-hidden="true" />
+              {formatPercent(sum.rainMax)}
+            </span>
+            <span className="daytab__mm mono">{formatMm(sum.rainTotal)}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }

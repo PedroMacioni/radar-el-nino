@@ -6,7 +6,7 @@ export async function fetchForecast(lat, lon, fetchImpl = fetch) {
     latitude: String(lat),
     longitude: String(lon),
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m',
-    hourly: 'temperature_2m,precipitation_probability,precipitation,uv_index,apparent_temperature',
+    hourly: 'temperature_2m,precipitation_probability,precipitation,uv_index,apparent_temperature,weather_code',
     daily: 'sunrise,sunset',
     timezone: 'auto',
     forecast_days: '7',
@@ -46,6 +46,7 @@ export function buildDays(hourly, today) {
       rainChance: hourly.precipitation_probability?.[index] ?? null,
       precip: hourly.precipitation?.[index] ?? null,
       uv: hourly.uv_index?.[index] ?? null,
+      code: hourly.weather_code?.[index] ?? null,
     })
   })
   return [...days.entries()].map(([date, hours]) => ({ date, hours }))

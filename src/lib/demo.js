@@ -19,6 +19,7 @@ export function buildDemoForecast(now = new Date()) {
   const temperature = []
   const feels = []
   const rainChance = []
+  const weatherCode = []
   const precip = []
   const uv = []
   const daily = { time: [], sunrise: [], sunset: [] }
@@ -38,6 +39,9 @@ export function buildDemoForecast(now = new Date()) {
       temperature.push(Math.round(t * 10) / 10)
       feels.push(Math.round((t + 2) * 10) / 10)
       rainChance.push(Math.min(100, Math.round(intensity * (30 + 70 * bell) + (intensity > 0.5 ? 12 : 0))))
+      // Código de tempo da Open-Meteo: trovoada nas horas de pico dos dias mais fortes, depois chuva, nublado e sol.
+      const chance = rainChance[rainChance.length - 1]
+      weatherCode.push(hour >= 13 && hour <= 19 && intensity >= 0.7 && chance >= 70 ? 95 : chance >= 75 ? 82 : chance >= 50 ? 63 : chance >= 30 ? 3 : intensity < 0.2 ? (hour % 5 === 0 ? 2 : 0) : 2)
       precip.push(Math.round(intensity * bell * 16 * 10) / 10)
       uv.push(hour < 6 || hour > 18 ? 0 : Math.round(8 * Math.sin(((hour - 6) / 12) * Math.PI) * (1 - 0.7 * intensity) * 10) / 10)
     }
@@ -57,6 +61,7 @@ export function buildDemoForecast(now = new Date()) {
       temperature_2m: temperature,
       apparent_temperature: feels,
       precipitation_probability: rainChance,
+      weather_code: weatherCode,
       precipitation: precip,
       uv_index: uv,
     },

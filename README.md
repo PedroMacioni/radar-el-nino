@@ -17,7 +17,8 @@ npm run preview  # abre a versão publicada localmente (com modo offline)
 
 - Busca por **cidade** ou **CEP**, com sugestões enquanto digita, e botão "Usar minha localização".
 - **Agora**: temperatura, sensação, umidade, vento e chuva das últimas 24 h.
-- **Previsão hora a hora** com gráfico interativo, resumo do dia e quadros por período.
+- **Previsão hora a hora** com gráfico interativo, resumo do dia e quadros por período. Cada dia da semana é um
+  cartão com o tempo (ícone), máxima e mínima, chance e volume de chuva; no celular a faixa dos dias rola para o lado.
 - **Avisos do INMET** (amarelo, laranja e vermelho) com visual próprio. O vermelho ativa o **modo de
   emergência**: testeira com 199 e SMS 40199, orientações e barra fixa para ligar no celular.
 - **Água, seca, ar e fogo**, em cartões ordenados do mais grave ao menos grave:

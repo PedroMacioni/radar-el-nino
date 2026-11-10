@@ -43,3 +43,9 @@ export function formatSavedAt(isoString) {
 export function formatMm(value) {
   return value == null ? '–' : `${(Math.round(value * 10) / 10).toLocaleString('pt-BR')} mm`
 }
+
+// "2026-11-10" -> "10/11"
+export function dayMonth(isoDate) {
+  const [, month, day] = isoDate.split('-')
+  return `${day}/${month}`
+}
