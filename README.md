@@ -1,125 +1,117 @@
 # Radar El Niño
 
-Site de consulta para quem quer ver, em uma tela, a previsão hora a hora, o aviso oficial e como pedir
-ajuda na sua cidade durante o El Niño. Feito em React + Vite, **sem banco de dados**.
+Previsão hora a hora, avisos oficiais e orientações de ajuda para a sua cidade durante o El Niño, tudo em uma tela só.
 
-## Como rodar
+**[Acessar o site → radar-el-nino.vercel.app](https://radar-el-nino.vercel.app)**
+
+O El Niño muda o clima do Brasil: seca no Norte e Nordeste, chuva forte no Sul, calor extremo, queimadas. As informações existem, mas estão espalhadas em vários portais. O Radar reúne as que importam para quem está na rua ou em casa, em linguagem comum, e funciona bem no celular, até com internet ruim.
+
+> Projeto independente, sem vínculo com órgãos oficiais. **Não substitui os avisos da Defesa Civil, do INMET ou de outros órgãos.**
+
+![Radar El Niño: aviso vermelho, condições agora e previsão hora a hora](docs/desktop-extremo.png)
+
+<sub>Capturas da tela de teste `/teste/extremo`, com dados simulados (nada ali é real).</sub>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/mapa.png" alt="Mapa dos avisos do INMET com chuva prevista e focos de calor"></td>
+    <td width="50%"><img src="docs/indicadores.png" alt="Cartões de rios, seca, reservatórios, ar, queimadas e calor"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Mapa dos avisos</sub></td>
+    <td align="center"><sub>Água, seca, ar e fogo</sub></td>
+  </tr>
+</table>
+
+## O que faz
+
+- **Busca por cidade ou CEP**, com sugestões ao digitar, ou pela localização do aparelho.
+- **Agora**: temperatura, sensação térmica, umidade, vento e chuva das últimas 24 h.
+- **Previsão hora a hora** com gráfico interativo, resumo do dia e quadros por período. Cada dia da semana é um cartão com ícone do tempo, máxima e mínima, chance e volume de chuva; no celular, a faixa dos dias rola para o lado.
+- **Avisos do INMET** (amarelo, laranja e vermelho). O nível vermelho ativa o **modo de emergência**: telefones 199 e SMS 40199 em destaque, orientações e uma barra fixa para ligar no celular.
+- **Água, seca, ar e fogo**, em cartões ordenados do mais grave ao menos grave:
+  - rios: previsão de vazão (Open-Meteo/GloFAS);
+  - reservatórios: volume das hidrelétricas da região (ONS);
+  - seca: chuva dos últimos 90 dias contra a média de 9 anos (Open-Meteo/ERA5);
+  - queimadas: focos de calor do INPE num raio de 50 km;
+  - calor, UV e qualidade do ar explicados sem jargão.
+- **Mapa dos avisos** (Leaflet): áreas de aviso do INMET por nível, chuva prevista nas próximas 24 h, o seu local e os focos de calor. Diz se você está dentro de uma área de aviso e lista o que fazer em cada uma.
+- **Atualização automática** a cada 5 minutos, ao voltar para a aba e quando a internet volta, com aviso quando surge um alerta novo.
+- **PWA e modo offline**: instala no celular e abre sem internet mostrando a última previsão e o último aviso salvos, sempre com a data.
+- **Como pedir ajuda**: números de emergência (199, 193, 192, 190) e orientações (abrigo, FGTS, Garantia-Safra, Proagro, carro-pipa, saúde depois da enchente).
+- **Doação por Pix** (`/apoie`), com QR Code gerado no próprio navegador.
+
+## Fontes de dados
+
+| Dado | Fonte |
+| --- | --- |
+| Previsão, vazão de rios, qualidade do ar, chuva histórica | [Open-Meteo](https://open-meteo.com) (inclui GloFAS e ERA5) |
+| Avisos meteorológicos | [INMET](https://portal.inmet.gov.br) |
+| Focos de calor | [INPE](https://terrabrasilis.dpi.inpe.br/queimadas/) |
+| Volume de reservatórios | [ONS](https://www.ons.org.br) |
+| Cidade a partir de coordenadas | BigDataCloud |
+| Fundo do mapa | OpenStreetMap |
+
+Limites a ter em mente: a vazão dos rios e a qualidade do ar são **modeladas**, não medições de estação; o indicador de seca **não** é o Monitor de Secas oficial; o volume dos reservatórios é da região, não da sua cidade.
+
+## Tecnologias
+
+React 18, Vite 5, Leaflet, vite-plugin-pwa, funções serverless na Vercel e testes com o runner nativo do Node (`node --test`). Não usa banco de dados.
+
+## Rodando localmente
+
+Requer Node.js 18 ou mais recente.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 (se estiver ocupada, o terminal mostra a porta usada)
-npm test         # testes das funções puras
-npm run build    # gera a pasta dist/
-npm run preview  # abre a versão publicada localmente (com modo offline)
+npm run dev       # http://localhost:5173
+npm test          # testes das funções puras
+npm run build     # gera a pasta dist/
+npm run preview   # versão publicada, com modo offline
 ```
 
-## O que já funciona
-
-- Busca por **cidade** ou **CEP**, com sugestões enquanto digita, e botão "Usar minha localização".
-- **Agora**: temperatura, sensação, umidade, vento e chuva das últimas 24 h.
-- **Previsão hora a hora** com gráfico interativo, resumo do dia e quadros por período. Cada dia da semana é um
-  cartão com o tempo (ícone), máxima e mínima, chance e volume de chuva; no celular a faixa dos dias rola para o lado.
-- **Avisos do INMET** (amarelo, laranja e vermelho) com visual próprio. O vermelho ativa o **modo de
-  emergência**: testeira com 199 e SMS 40199, orientações e barra fixa para ligar no celular.
-- **Água, seca, ar e fogo**, em cartões ordenados do mais grave ao menos grave:
-  - Rios: previsão de vazão (Open-Meteo/GloFAS). É modelo, não medição de estação.
-  - Reservatórios: volume das hidrelétricas da região (ONS), via `/api/reservatorios`.
-  - Seca: chuva dos últimos 90 dias contra a média de 9 anos (Open-Meteo/ERA5). Não é o Monitor de Secas oficial.
-  - Queimadas: focos de calor do INPE num raio de 50 km, via `/api/queimadas`.
-  - Calor e UV, e qualidade do ar, explicados em linguagem comum.
-- **Mapa dos avisos** (botão "Ver no mapa" ou atalho "Mapa" no menu; só carrega ao clicar): as áreas de aviso do
-  INMET (cor e traço por nível), a chuva prevista nas próximas 24 h (mapa de calor, Open-Meteo), o seu local e
-  os focos de calor do INPE. Cobre uma região de uns 550 km ao redor (avisos), 250 km (focos) e uns 265 km
-  (grade de chuva). Uma frase diz se você está dentro de uma área de aviso, três números resumem
-  avisos, chuva e focos, e uma lista ao lado traz, para cada aviso, os riscos, o que fazer e quantos municípios
-  atinge. Tocar no mapa mostra o que há naquele ponto (aviso, foco de calor ou chuva) e não abre nada se não houver. Dá para dar zoom com a roda do mouse com o cursor sobre o mapa. Sem avisos, o mapa ocupa a
-  largura toda. No modo de emergência fica dentro de "Mais informações", abaixo dos botões de socorro.
-  Dados em `/api/mapa`.
-- **Atualiza sozinho** a cada 5 minutos, ao voltar para a aba e quando a internet volta, e avisa quando
-  surge um aviso novo.
-- **Modo offline (PWA)**: a página abre sem internet e mostra a última previsão e o último aviso salvos,
-  sempre com a data. Também pode ser instalada no celular.
-- **Como pedir ajuda**: números de emergência (199, 193, 192, 190) e orientações (abrigo, FGTS, Garantia-Safra,
-  Proagro, carro-pipa, saúde depois da enchente).
-- **Tela 404** e **tela de doação** (`/apoie`, veja abaixo).
-
-## Telas de teste
+### Telas de teste
 
 Abrem a página com dados simulados (nada é real):
 
-- `/teste` ou `/teste/vermelho`: aviso vermelho, modo de emergência.
-- `/teste/laranja` e `/teste/amarelo`: os outros níveis.
-- `/teste/extremo`: cenário extremo, com o cartão "Mais informações" e o mapa já abertos (7 avisos de vários
-  níveis, chuva forte e muitos focos de calor).
+- `/teste` ou `/teste/vermelho`: aviso vermelho, modo de emergência
+- `/teste/laranja` e `/teste/amarelo`: os outros níveis
+- `/teste/extremo`: cenário extremo, com mapa aberto, vários avisos, chuva forte e muitos focos de calor
 
-Qualquer outro endereço desconhecido mostra a tela 404. Em produção, o `vercel.json` manda todos os
-endereços (menos `/api/...`) para o app. Em outra hospedagem, configure o mesmo redirecionamento.
+## Configuração (opcional)
 
-## Doação por Pix (`/apoie`)
+Copie `.env.example` para `.env.local`. Em produção, defina as mesmas variáveis no painel da hospedagem.
 
-A tela gera o QR Code e o "Pix copia e cola" no navegador (código em `src/lib/pix.js`). A chave não fica
-no código: copie `.env.example` para `.env.local` e preencha.
+| Variável | Para que serve |
+| --- | --- |
+| `VITE_PIX_KEY`, `VITE_PIX_NAME`, `VITE_PIX_CITY` | Ativam a tela de doação. Sem as três, ela mostra "Doações em breve". A chave nunca fica no código. |
+| `VITE_DONATION_PURPOSE` | Texto de "Para que serve" na doação. |
+| `VITE_MAP_TILES_URL`, `VITE_MAP_ATTRIBUTION` | Troca o fundo do mapa. O padrão é o OpenStreetMap, cujo servidor gratuito tem regras de uso leve. |
 
-```bash
-VITE_PIX_KEY=       # chave Pix que recebe
-VITE_PIX_NAME=      # nome do recebedor (até 25 letras, sem acento)
-VITE_PIX_CITY=      # cidade do recebedor (até 15 letras)
-```
+## Publicação
 
-Em produção, configure as mesmas variáveis no painel da hospedagem e publique de novo. Sem as três, a
-tela mostra "Doações em breve". Os links de apoio **somem no modo de emergência**.
-Antes de divulgar, **teste um Pix de valor baixo** e confira o nome do recebedor que aparece no banco.
+O projeto roda na Vercel sem configuração extra: a pasta `api/` vira funções serverless e o `vercel.json` redireciona todos os endereços (menos `/api/...`) para o app.
 
-## Fundo do mapa
-
-O mapa usa o Leaflet com o fundo do OpenStreetMap por padrão. **O servidor de imagens gratuito do OpenStreetMap
-tem regras de uso** (uso leve, com crédito visível): serve para começar, mas com muito acesso ou uso comercial
-troque por um provedor próprio. Para trocar, defina no `.env.local` (ou no painel da hospedagem):
-
-```bash
-VITE_MAP_TILES_URL=https://seu-provedor/{z}/{x}/{y}.png
-VITE_MAP_ATTRIBUTION=© Provedor, © OpenStreetMap
-```
-
-Sem internet o mapa não funciona: aparece o aviso de que ele precisa de conexão, e o resto da página continua.
-
-## O que ainda não está integrado
-
-- Reservatório da sua cidade (hoje é o volume da região inteira) e Monitor de Secas oficial.
-- Guia de carro-pipa e cisterna por município.
-- Aviso com o app fechado (notificação push).
-- Chuva em tempo real no mapa (não achei fonte aberta e confiável de radar) e abrigos (não há base nacional aberta).
-
-## Pontos de atenção
-
-1. **Avisos do INMET.** A rota `/api/alertas` consulta `https://apiprevmet3.inmet.gov.br/avisos/ativos`.
-   Esse endpoint não tem documentação pública que eu tenha conseguido confirmar. Na consulta que fiz,
-   cada aviso trazia `poligono`, `municipios`, datas e horas, mas **não encontrei os campos de severidade
-   e de descrição**. O código procura o nível em `severidade`, `nivel` e `cor`. Se não achar, mostra
-   "Aviso do INMET" em cinza e manda a pessoa ao portal oficial. **Rode `npm run dev`, abra
-   `/api/alertas?lat=-22.9&lon=-47.06` e confira o JSON real**; depois ajuste `severityFromRaw` e
-   `normalizeWarning` em `server/alerts.js`.
-2. As rotas `/api/alertas`, `/api/queimadas`, `/api/reservatorios` e `/api/mapa` existem como funções serverless (pasta
-   `api/`, formato da Vercel) e no servidor de desenvolvimento. Em hospedagem só estática (GitHub Pages)
-   elas não existem: a faixa de aviso mostra o link do portal do INMET e os cartões de queimadas e
-   reservatórios mostram "Sem dado agora".
-3. Os níveis de UV e de qualidade do ar usam as faixas da OMS e do índice europeu. A qualidade do ar do
-   Open-Meteo é modelada, não medida em estação.
-4. **Uso comercial.** A API gratuita da Open-Meteo, pelo que sei, é só para uso não comercial. Se o site
-   passar a ter patrocínio ou cobrança, confira os termos atuais e o plano comercial. Veja também as regras
-   de uso e atribuição das outras fontes (INMET, INPE, ONS).
-5. Este site **não substitui os avisos oficiais**; o texto no rodapé e na faixa de aviso diz isso.
-6. Os textos de ajuda (FGTS, Proagro, saúde) são gerais e sem valores nem prazos. Vale uma pessoa da área
-   revisar antes de divulgar.
+Em hospedagem só estática (GitHub Pages, por exemplo) as rotas `/api` não existem: a faixa de aviso mostra o link do portal do INMET e os cartões de queimadas, reservatórios e mapa mostram "Sem dado agora".
 
 ## Estrutura
 
 ```
-api/                  funções serverless (alertas, queimadas, reservatórios, mapa)
-server/               lógica dos dados (avisos, focos do INPE, reservatórios do ONS, áreas do mapa)
-src/lib/              busca, previsão, gráfico, níveis, rotas, Pix, armazenamento
-src/components/       telas
-public/               ícones do app instalado
-vercel.json           redirecionamento de todos os endereços para o app
-tests/                testes (node --test)
+api/             funções serverless (alertas, queimadas, reservatórios, mapa)
+server/          lógica dos dados (avisos, focos do INPE, reservatórios do ONS, áreas do mapa)
+src/lib/         busca, previsão, gráfico, níveis, rotas, Pix, armazenamento
+src/components/  telas
+public/          ícones do app instalado
+tests/           testes (node --test)
 ```
+
+## Limitações conhecidas
+
+- O endpoint de avisos do INMET (`apiprevmet3.inmet.gov.br/avisos/ativos`) não tem documentação pública. Quando o aviso não traz o nível de severidade em `severidade`, `nivel` ou `cor`, o app mostra "Aviso do INMET" em cinza e aponta para o portal oficial. A normalização está em `server/alerts.js`.
+- Ainda não há notificação push com o app fechado, guia de carro-pipa por município, chuva em tempo real (radar) nem mapa de abrigos, por falta de fonte aberta e confiável.
+- A API gratuita da Open-Meteo é para uso não comercial. Em caso de patrocínio ou cobrança, confira os termos e o plano comercial, além das regras de INMET, INPE e ONS.
+- Os textos de ajuda (FGTS, Proagro, saúde) são gerais, sem valores nem prazos, e merecem revisão de quem é da área.
+
+## Licença
+
+[MIT](LICENSE)

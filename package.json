@@ -2,6 +2,8 @@
   "name": "el-nino-perto-de-voce",
   "private": true,
   "version": "0.1.0",
+  "description": "Previsão hora a hora, avisos oficiais e como pedir ajuda na sua cidade durante o El Niño.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
