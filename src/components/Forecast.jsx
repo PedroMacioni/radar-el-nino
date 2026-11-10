@@ -114,6 +114,9 @@ function HourDetail({ hour, isNow }) {
   if (!hour) return <div className="detail detail--empty">Sem dados para esta hora.</div>
   const rain = rainLevel(hour.rainChance)
   const uv = uvLevel(hour.uv)
+  // "13,1 mm" vira número + unidade, para a unidade ficar menor.
+  const [mmNumber, ...mmRest] = String(formatMm(hour.precip)).split(' ')
+  const mmUnit = mmRest.join(' ')
   return (
     <div className="detail" aria-live="polite">
       <div className="detail__when">
@@ -124,14 +127,21 @@ function HourDetail({ hour, isNow }) {
         <span className="detail__big mono" style={{ color: tempColor(hour.temp) }}>{formatTemp(hour.temp)}</span>
         <span className="detail__small">Sensação {formatTemp(hour.feels)}</span>
       </div>
-      <div className="detail__rain">
-        <span className="badge" style={{ background: rain.color, color: rain.ink }}>{rain.label}</span>
-        <span className="detail__small"><b className="mono">{formatPercent(hour.rainChance)}</b> de chance · <b className="mono">{formatMm(hour.precip)}</b></span>
-      </div>
-      <div className="detail__uv">
-        <span className="detail__small">Índice UV</span>
-        <span><b className="mono">{hour.uv == null ? '–' : Math.round(hour.uv * 10) / 10}</b>{uv && <span className="detail__small"> · {uv.label}</span>}</span>
-      </div>
+      <span className="badge detail__level" style={{ background: rain.color, color: rain.ink }}>{rain.label}</span>
+      <dl className="detail__stats">
+        <div>
+          <dt>Chance</dt>
+          <dd className="mono">{formatPercent(hour.rainChance)}</dd>
+        </div>
+        <div>
+          <dt>Volume</dt>
+          <dd className="mono">{mmNumber}{mmUnit && <small className="now-grid__unit"> {mmUnit}</small>}</dd>
+        </div>
+        <div>
+          <dt>Índice UV</dt>
+          <dd className="mono">{hour.uv == null ? '–' : Math.round(hour.uv * 10) / 10}{uv && <small className="now-grid__unit"> {uv.label}</small>}</dd>
+        </div>
+      </dl>
     </div>
   )
 }

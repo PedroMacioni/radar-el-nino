@@ -8,21 +8,26 @@ export default function NowStrip({ now }) {
     { label: 'Sensação', Icon: LuThermometerSun, value: formatTemp(now.feels), color: tempColor(now.feels) },
     { label: 'Umidade', Icon: LuDroplets, value: formatPercent(now.humidity), color: '#1560bd' },
     { label: 'Vento', Icon: LuWind, value: now.wind == null ? '–' : `${Math.round(now.wind)} km/h`, color: '#0e7c8c' },
-    { label: 'Chuva 24 h', Icon: LuCloudRain, value: formatMm(now.rain24h), color: '#2f7fc4' },
+    { label: 'Chuva 24h', Icon: LuCloudRain, value: formatMm(now.rain24h), color: '#2f7fc4' },
   ]
   return (
     <section aria-labelledby="t-agora">
       <h2 id="t-agora" className="section-title">Agora</h2>
       <dl className="now-grid">
-        {items.map(({ label, Icon, value, color }) => (
-          <div key={label} className="now-grid__item" style={{ '--tint': color }}>
-            <dt>
-              <span className="now-grid__icon" aria-hidden="true"><Icon size={16} /></span>
-              {label}
-            </dt>
-            <dd className="mono">{value}</dd>
-          </div>
-        ))}
+        {items.map(({ label, Icon, value, color }) => {
+          // "17 km/h" vira número + unidade, para a unidade poder ficar menor.
+          const [number, ...rest] = String(value).split(' ')
+          const unit = rest.join(' ')
+          return (
+            <div key={label} className="now-grid__item" style={{ '--tint': color }}>
+              <dt>
+                <span className="now-grid__icon" aria-hidden="true"><Icon size={16} /></span>
+                {label}
+              </dt>
+              <dd className="mono">{number}{unit && <small className="now-grid__unit"> {unit}</small>}</dd>
+            </div>
+          )
+        })}
       </dl>
     </section>
   )

@@ -165,6 +165,28 @@ function Home() {
 
   // No modo de emergência, mapa e ajuda ficam dentro de "Mais informações". Ir para um deles
   // pelo menu (ou por um link direto) abre o cartão e leva até lá.
+  // Ao chegar de outra página (ex.: de /apoie para /#ajuda), o navegador tenta rolar antes de a
+  // página existir e fica no topo. Além disso, a previsão chega depois e empurra o trecho para baixo.
+  // Por isso a página acompanha o trecho enquanto carrega, até a pessoa rolar ou tocar na tela.
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    const target = id ? document.getElementById(id) : null
+    if (!target || target.closest('details') || typeof ResizeObserver === 'undefined') return undefined
+    const follow = () => target.scrollIntoView({ behavior: 'instant' })
+    follow()
+    const observer = new ResizeObserver(follow)
+    observer.observe(document.body)
+    const stop = () => observer.disconnect()
+    const events = ['wheel', 'touchstart', 'keydown', 'pointerdown']
+    events.forEach((name) => window.addEventListener(name, stop, { once: true, passive: true }))
+    const timer = setTimeout(stop, 6000)
+    return () => {
+      stop()
+      clearTimeout(timer)
+      events.forEach((name) => window.removeEventListener(name, stop))
+    }
+  }, [])
+
   useEffect(() => {
     const openContaining = () => {
       const id = window.location.hash.slice(1)
