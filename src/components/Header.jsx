@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LuHeart, LuHouse, LuLifeBuoy, LuMap } from 'react-icons/lu'
+import { LuHouse, LuLifeBuoy, LuMap } from 'react-icons/lu'
 import { APP_NAME } from '../lib/brand.js'
 
 // A ordem aqui é a mesma da página: a marcação por rolagem depende disso.
@@ -7,8 +7,6 @@ const ITEMS = [
   { id: 'inicio', label: 'Início', Icon: LuHouse },
   { id: 'mapa', label: 'Mapa', Icon: LuMap },
   { id: 'ajuda', label: 'Pedir ajuda', Icon: LuLifeBuoy },
-  // Página própria: não entra na marcação por rolagem e some no modo de emergência.
-  { id: 'apoie', label: 'Apoie', Icon: LuHeart, page: '/apoie' },
 ]
 
 // Descobre em qual seção a pessoa está, para marcar a aba certa.

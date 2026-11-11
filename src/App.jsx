@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazyWithReload } from './lib/lazy.js'
 import { LuBellRing, LuChevronDown, LuRefreshCw } from 'react-icons/lu'
 import Header from './components/Header.jsx'
 import SearchBar from './components/SearchBar.jsx'
@@ -21,7 +22,7 @@ import { loadCachedAlerts, loadCachedData, loadPlace, saveCachedAlerts, saveCach
 import { fetchAir, fetchForecast, summarize } from './lib/weather.js'
 
 // A tela de doação (com o gerador de QR Code) só é baixada por quem abrir /apoie.
-const Donate = lazy(() => import('./components/Donate.jsx'))
+const Donate = lazyWithReload(() => import('./components/Donate.jsx'))
 
 function Home() {
   const demo = isDemoRoute()
