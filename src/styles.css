@@ -232,7 +232,8 @@ html { scroll-behavior: smooth; }
 @media (max-width: 720px) {
   .container { padding: 0 20px; }
   .topbar__inner { padding-top: 8px; padding-bottom: 8px; }
-  .brand { font-size: 17px; }
+  .topbar__inner { justify-content: center; }
+  .brand { font-size: 17px; justify-content: center; }
   /* Abas fixas embaixo, como num app. O espaço no fim da página evita que cubram o rodapé. */
   :root { --tabbar: 62px; }
   body { padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); }
