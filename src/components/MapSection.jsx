@@ -1,4 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazyWithReload } from '../lib/lazy.js'
 import { LuMap, LuRefreshCw } from 'react-icons/lu'
 import { buildDemoMap, buildDemoRain, demoLevel, isExtremeDemo } from '../lib/demo.js'
 import { describeMap, fetchMapData, fetchRain, formatMm, summarizeAreas, summarizeRain } from '../lib/map.js'
@@ -7,7 +8,7 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 
 // O mapa (biblioteca, estilos e imagens) só é baixado quando a pessoa abre. Quem está com sinal fraco
 // e só quer o aviso nunca paga esse custo.
-const MapView = lazy(() => import('./MapView.jsx'))
+const MapView = lazyWithReload(() => import('./MapView.jsx'))
 
 const FILTERS = [
   ['todos', 'Todos'],
