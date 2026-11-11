@@ -74,7 +74,6 @@ function PixCard() {
           <CopyButton text={payload} label="Copiar código Pix (copia e cola)" doneLabel="Código copiado" />
           <dl className="donate__who">
             <div><dt>Recebedor</dt><dd>{DONATION.receiverName}</dd></div>
-            <div><dt>Cidade</dt><dd>{DONATION.receiverCity}</dd></div>
             <div><dt>Valor</dt><dd>{amount ? money(amount) : 'Você escolhe no app do banco'}</dd></div>
           </dl>
           <p className="donate__key-label">Prefere digitar a chave Pix?</p>
