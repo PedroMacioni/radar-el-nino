@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 // Cor da temperatura: azul (frio) → verde-água → âmbar → vermelho (calor).
 const TEMP_STOPS = [
   [8, [37, 99, 235]],
@@ -24,11 +26,11 @@ export function tempColor(t) {
 
 // Chance de chuva: cada faixa tem cor e texto próprios (a cor nunca é a única pista).
 export function rainLevel(p) {
-  if (p == null) return { key: 'none', label: 'Sem dado', color: '#c4cbd2', ink: '#4f5b66' }
-  if (p < 20) return { key: 'low', label: 'Chuva improvável', color: '#b6d4ee', ink: '#0f1b26' }
-  if (p < 50) return { key: 'some', label: 'Chuva possível', color: '#6aa9dd', ink: '#0f1b26' }
-  if (p < 70) return { key: 'likely', label: 'Chuva provável', color: '#2f7fc4', ink: '#ffffff' }
-  return { key: 'high', label: 'Chuva muito provável', color: '#14509c', ink: '#ffffff' }
+  if (p == null) return { key: 'none', label: t('Sem dado'), color: '#c4cbd2', ink: '#4f5b66' }
+  if (p < 20) return { key: 'low', label: t('Chuva improvável'), color: '#b6d4ee', ink: '#0f1b26' }
+  if (p < 50) return { key: 'some', label: t('Chuva possível'), color: '#6aa9dd', ink: '#0f1b26' }
+  if (p < 70) return { key: 'likely', label: t('Chuva provável'), color: '#2f7fc4', ink: '#ffffff' }
+  return { key: 'high', label: t('Chuva muito provável'), color: '#14509c', ink: '#ffffff' }
 }
 
 // Calcula a geometria do gráfico (temperatura em linha, chance de chuva em barras).

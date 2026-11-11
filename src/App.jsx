@@ -18,6 +18,8 @@ import { DEMO_AIR, DEMO_FIRES, DEMO_PLACE, DEMO_RESERVOIRS, buildDemoDrought, bu
 import { placeLabel } from './lib/geo.js'
 import { isDonateRoute, isKnownRoute } from './lib/routes.js'
 import { formatSavedAt } from './lib/format.js'
+import { t, useLang } from './lib/i18n.js'
+import { translateTitle } from './lib/inmet.js'
 import { loadCachedAlerts, loadCachedData, loadPlace, saveCachedAlerts, saveCachedData, savePlace } from './lib/storage.js'
 import { fetchAir, fetchForecast, summarize } from './lib/weather.js'
 
@@ -25,6 +27,7 @@ import { fetchAir, fetchForecast, summarize } from './lib/weather.js'
 const Donate = lazyWithReload(() => import('./components/Donate.jsx'))
 
 function Home() {
+  useLang()
   const demo = isDemoRoute()
   const [place, setPlace] = useState(() => (demo ? DEMO_PLACE : loadPlace()))
   const [weather, setWeather] = useState({ status: 'idle' })
@@ -219,7 +222,7 @@ function Home() {
     <div id="inicio" className={emergency ? 'is-emergency' : undefined}>
       {demo && (
         <div className="demo">
-          <strong>Modo de teste</strong> · dados simulados, nada aqui é real. <a href="/">Sair do teste</a>
+          <strong>{t('Modo de teste')}</strong> · {t('dados simulados, nada aqui é real.')} <a href="/">{t('Sair do teste')}</a>
         </div>
       )}
       <Header />
@@ -230,15 +233,15 @@ function Home() {
         <div className="newalert" role="status">
           <div className="container newalert__inner">
             <LuBellRing size={20} aria-hidden="true" />
-            <span><strong>Novo aviso:</strong> {freshAlert.title || 'aviso meteorológico'}{freshAlert.severity && freshAlert.severity !== 'desconhecido' ? ` (${freshAlert.severity})` : ''}</span>
-            <button type="button" onClick={() => setFreshAlert(null)}>Entendi</button>
+            <span><strong>{t('Novo aviso:')}</strong> {translateTitle(freshAlert.title) || t('aviso meteorológico')}{freshAlert.severity && freshAlert.severity !== 'desconhecido' ? ` (${t(freshAlert.severity)})` : ''}</span>
+            <button type="button" onClick={() => setFreshAlert(null)}>{t('Entendi')}</button>
           </div>
         </div>
       )}
       <main className="container page">
         {!place && (
           <p className="empty">
-            Digite o nome da sua cidade ou o CEP para ver a previsão hora a hora, os avisos oficiais do INMET e como pedir ajuda.
+            {t('Digite o nome da sua cidade ou o CEP para ver a previsão hora a hora, os avisos oficiais do INMET e como pedir ajuda.')}
           </p>
         )}
         {place && (
@@ -247,9 +250,9 @@ function Home() {
               <h1>{placeLabel(place)}</h1>
               {summary && (
                 <span className="refresh">
-                  <span className="mono muted small">{refreshing ? 'Atualizando…' : `Atualizado às ${summary.updatedAt}`}</span>
+                  <span className="mono muted small">{refreshing ? t('Atualizando…') : t('Atualizado às {time}', { time: summary.updatedAt })}</span>
                   <button type="button" className="refresh__btn" onClick={() => setRefreshKey((k) => k + 1)} disabled={refreshing}
-                    aria-label="Atualizar previsão" title="Atualizar previsão">
+                    aria-label={t('Atualizar previsão')} title={t('Atualizar previsão')}>
                     <LuRefreshCw className={refreshing ? 'spin' : undefined} size={18} aria-hidden="true" />
                   </button>
                 </span>
@@ -257,13 +260,13 @@ function Home() {
             </div>
             {weather.status === 'cached' && (
               <p className="notice" role="status">
-                Sem conexão com a previsão. Mostrando os dados salvos em {formatSavedAt(weather.savedAt)}.
+                {t('Sem conexão com a previsão. Mostrando os dados salvos em {date}.', { date: formatSavedAt(weather.savedAt) })}
               </p>
             )}
-            {weather.status === 'loading' && <p className="notice" role="status">Carregando a previsão…</p>}
+            {weather.status === 'loading' && <p className="notice" role="status">{t('Carregando a previsão…')}</p>}
             {weather.status === 'error' && (
               <p className="notice notice--error" role="alert">
-                Não foi possível carregar a previsão agora e não há dados salvos para este local. Tente de novo em instantes.
+                {t('Não foi possível carregar a previsão agora e não há dados salvos para este local. Tente de novo em instantes.')}
               </p>
             )}
             {summary && (
@@ -282,8 +285,8 @@ function Home() {
           <details className="more" ref={moreRef}>
             <summary className="more__summary">
               <span className="more__text">
-                <span className="more__title">Mais informações</span>
-                <span className="more__hint">Rios, reservatórios, seca, ar, queimadas e como pedir ajuda</span>
+                <span className="more__title">{t('Mais informações')}</span>
+                <span className="more__hint">{t('Rios, reservatórios, seca, ar, queimadas e como pedir ajuda')}</span>
               </span>
               <LuChevronDown className="more__chev" size={22} aria-hidden="true" />
             </summary>
@@ -313,11 +316,12 @@ function Home() {
 }
 
 export default function App() {
+  useLang()
   if (isDonateRoute()) {
     return (
       <div>
         <Header standalone current="apoie" />
-        <Suspense fallback={<p className="notice container">Carregando…</p>}>
+        <Suspense fallback={<p className="notice container">{t('Carregando…')}</p>}>
           <Donate />
         </Suspense>
         <Footer />

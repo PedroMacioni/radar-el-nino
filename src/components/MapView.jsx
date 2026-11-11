@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { formatDateTime } from '../lib/format.js'
-import { RAIN_BINS, SEVERITY_LABEL, areaKey, buildRainField, formatMm, rainAt, rainBin, whatIsHere } from '../lib/map.js'
+import { LEVEL_NAME, RAIN_BINS, SEVERITY_LABEL, areaKey, buildRainField, formatMm, rainAt, rainBin, whatIsHere } from '../lib/map.js'
+import { t, useLang } from '../lib/i18n.js'
+import { translateTitle } from '../lib/inmet.js'
 
 // Fundo do mapa. O padrão é o do OpenStreetMap, que tem regras de uso (uso leve, com crédito).
 // Para muito acesso ou uso comercial, troque por um provedor próprio nestas variáveis.
@@ -18,6 +20,7 @@ export const AREA_STYLE = {
   desconhecido: { color: '#4f5b66', dashArray: '8 4' },
 }
 
+// Textos em português; a tradução é feita na hora de desenhar.
 const LAYERS = [
   ['areas', 'Áreas de aviso'],
   ['rain', 'Chuva em 24 h'],
@@ -71,16 +74,16 @@ function hereBox(items) {
     part.className = 'mapinfo__item'
     if (item.kind === 'area') {
       const { area } = item
-      const future = area.when === 'hoje' || !area.when ? '' : ' (previsto)'
-      add(part, 'strong', `Aviso ${SEVERITY_LABEL[area.severity] || 'do INMET'}${future}: ${area.title || 'aviso meteorológico'}`)
-      if (area.end) add(part, 'div', `Válido até ${formatDateTime(area.end)}`)
-      add(part, 'div', area.inside ? 'O seu local está dentro desta área.' : 'O seu local está fora desta área.')
+      const future = area.when === 'hoje' || !area.when ? '' : ` (${t('previsto')})`
+      add(part, 'strong', t('Aviso {level}{future}: {title}', { level: SEVERITY_LABEL[area.severity] || t('do INMET'), future, title: translateTitle(area.title) || t('aviso meteorológico') }))
+      if (area.end) add(part, 'div', t('Válido até {date}', { date: formatDateTime(area.end) }))
+      add(part, 'div', area.inside ? t('O seu local está dentro desta área.') : t('O seu local está fora desta área.'))
     } else if (item.kind === 'fire') {
-      add(part, 'strong', 'Foco de calor')
-      add(part, 'div', 'Detectado hoje pelo INPE.')
+      add(part, 'strong', t('Foco de calor'))
+      add(part, 'div', t('Detectado hoje pelo INPE.'))
     } else {
-      add(part, 'strong', 'Chuva prevista')
-      add(part, 'div', `${formatMm(item.mm)} em 24 h (${item.label})`)
+      add(part, 'strong', t('Chuva prevista'))
+      add(part, 'div', t('{value} em 24 h ({label})', { value: formatMm(item.mm), label: item.label }))
     }
     box.append(part)
   }
@@ -88,6 +91,7 @@ function hereBox(items) {
 }
 
 export default function MapView({ place, data, rain, focus }) {
+  const lang = useLang()
   const element = useRef(null)
   const mapRef = useRef(null)
   const layers = useRef({})
@@ -156,12 +160,12 @@ export default function MapView({ place, data, rain, focus }) {
     if (points.length > 0) {
       L.circle(here, { radius: 50000, color: '#4f5b66', weight: 1.5, dashArray: '2 6', fill: false, interactive: false }).addTo(fireGroup)
       for (const [lat, lon] of points) {
-        L.circleMarker([lat, lon], { radius: 5, color: '#fff', weight: 1.5, fillColor: '#dc5a1c', fillOpacity: 0.95 }).bindTooltip('Foco de calor').addTo(fireGroup)
+        L.circleMarker([lat, lon], { radius: 5, color: '#fff', weight: 1.5, fillColor: '#dc5a1c', fillOpacity: 0.95 }).bindTooltip(t('Foco de calor')).addTo(fireGroup)
       }
     }
 
     const me = L.circleMarker(here, { radius: 9, color: '#fff', weight: 3, fillColor: '#0f1b26', fillOpacity: 1, interactive: false })
-      .bindTooltip('Você está aqui', { permanent: true, direction: 'top', offset: [0, -8] })
+      .bindTooltip(t('Você está aqui'), { permanent: true, direction: 'top', offset: [0, -8] })
 
     layers.current = { rain: rainGroup, areas: areaGroup, fires: fireGroup, me }
     if (show.rain) rainGroup.addTo(map)
@@ -188,7 +192,7 @@ export default function MapView({ place, data, rain, focus }) {
       map.fitBounds(bounds.pad(0.15), { maxZoom: 9, animate: false })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, field, place])
+  }, [data, field, place, lang])
 
   // Liga e desliga as camadas.
   useEffect(() => {
@@ -219,44 +223,44 @@ export default function MapView({ place, data, rain, focus }) {
   return (
     <div className="mapview">
       <div className="mapframe">
-        <div ref={element} className="mapview__map" role="region" aria-label="Mapa com as áreas de aviso, a chuva prevista e os focos de calor perto de você" />
+        <div ref={element} className="mapview__map" role="region" aria-label={t('Mapa com as áreas de aviso, a chuva prevista e os focos de calor perto de você')} />
 
         {controls.length > 1 && (
-          <div className="mapview__toggles" role="group" aria-label="Camadas do mapa">
+          <div className="mapview__toggles" role="group" aria-label={t('Camadas do mapa')}>
             {controls.map(([key, label]) => (
-              <button key={key} type="button" aria-pressed={show[key]} onClick={() => setShow((current) => ({ ...current, [key]: !current[key] }))}>{label}</button>
+              <button key={key} type="button" aria-pressed={show[key]} onClick={() => setShow((current) => ({ ...current, [key]: !current[key] }))}>{t(label)}</button>
             ))}
           </div>
         )}
 
         <details className="maplegend" open={legendOpen} onToggle={(event) => setLegendOpen(event.currentTarget.open)}>
-          <summary>Legenda</summary>
+          <summary>{t('Legenda')}</summary>
           <div className="maplegend__body">
             {available.areas && (
-              <ul className="maplegend__row" aria-label="Níveis de aviso">
+              <ul className="maplegend__row" aria-label={t('Níveis de aviso')}>
                 {['vermelho', 'laranja', 'amarelo'].map((level) => (
                   <li key={level}>
                     <svg width="22" height="12" aria-hidden="true">
                       <rect x="1" y="1" width="20" height="10" rx="2" fill={AREA_STYLE[level].color} fillOpacity="0.3" stroke={AREA_STYLE[level].color} strokeWidth="2" strokeDasharray={AREA_STYLE[level].dashArray || undefined} />
                     </svg>
-                    {level[0].toUpperCase() + level.slice(1)}
+                    {LEVEL_NAME[level]}
                   </li>
                 ))}
               </ul>
             )}
-            <ul className="maplegend__row" aria-label="Marcadores">
-              <li><span className="mapview__dot mapview__dot--me" aria-hidden="true" />Seu local</li>
-              {available.fires && <li><span className="mapview__dot mapview__dot--fire" aria-hidden="true" />Foco</li>}
+            <ul className="maplegend__row" aria-label={t('Marcadores')}>
+              <li><span className="mapview__dot mapview__dot--me" aria-hidden="true" />{t('Seu local')}</li>
+              {available.fires && <li><span className="mapview__dot mapview__dot--fire" aria-hidden="true" />{t('Foco')}</li>}
               {available.fires && (
                 <li>
                   <svg width="22" height="12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" stroke="#4f5b66" strokeWidth="2" strokeDasharray="2 5" strokeLinecap="round" /></svg>
-                  Raio 50 km
+                  {t('Raio 50 km')}
                 </li>
               )}
             </ul>
             {available.rain && (
-              <div className="maplegend__rain" role="img" aria-label={`Chuva em 24 horas: ${[...RAIN_BINS].reverse().map((bin) => bin.label).join(', ')}`}>
-                <span className="maplegend__title">Chuva em 24 h (mm)</span>
+              <div className="maplegend__rain" role="img" aria-label={t('Chuva em 24 horas: {levels}', { levels: [...RAIN_BINS].reverse().map((bin) => bin.label).join(', ') })}>
+                <span className="maplegend__title">{t('Chuva em 24 h (mm)')}</span>
                 <div className="maplegend__bar">
                   {[...RAIN_BINS].reverse().map((bin) => (
                     <span key={bin.key} style={{ background: bin.color }}><b>{bin.min}{bin.key === 'extrema' ? '+' : ''}</b></span>

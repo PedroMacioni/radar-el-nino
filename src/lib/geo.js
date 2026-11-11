@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 
 const STATE_BY_UF = {
@@ -52,7 +54,7 @@ export async function resolveQuery(text, fetchImpl = fetch) {
   if (!query) return { places: [] }
   if (isCep(query)) {
     const city = await cityFromCep(query, fetchImpl)
-    if (!city) return { places: [], message: 'CEP não encontrado.' }
+    if (!city) return { places: [], message: t('CEP não encontrado.') }
     const found = await searchCities(city.name, fetchImpl)
     const state = STATE_BY_UF[city.uf]
     const match = found.find((p) => state && normalize(p.state) === normalize(state) && normalize(p.name) === normalize(city.name))
@@ -84,10 +86,10 @@ export async function reverseGeocode(lat, lon, fetchImpl = fetch) {
 
 function currentCoords() {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error('Este aparelho não oferece localização.'))
+    if (!navigator.geolocation) return reject(new Error(t('Este aparelho não oferece localização.')))
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => reject(new Error('Não foi possível obter a sua localização. Digite a cidade ou o CEP.')),
+      () => reject(new Error(t('Não foi possível obter a sua localização. Digite a cidade ou o CEP.'))),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     )
   })
@@ -96,5 +98,5 @@ function currentCoords() {
 export async function getBrowserPosition() {
   const { lat, lon } = await currentCoords()
   const found = await reverseGeocode(lat, lon)
-  return { id: 'gps', name: found?.name || 'Minha localização', state: found?.state || '', lat, lon }
+  return { id: 'gps', name: found?.name || t('Minha localização'), state: found?.state || '', lat, lon }
 }

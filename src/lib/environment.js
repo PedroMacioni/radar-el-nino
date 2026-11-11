@@ -1,4 +1,6 @@
 import { coordsQuery } from './geo.js'
+import { dayMonth, formatNumber } from './format.js'
+import { t } from './i18n.js'
 
 // Rios (vazão prevista) e queimadas (focos de calor) perto do local.
 
@@ -23,8 +25,8 @@ export async function fetchFires(lat, lon, fetchImpl = fetch) {
   return response.json()
 }
 
-// Número com vírgula, como se escreve em português (1 casa decimal abaixo de 100).
-const round = (n) => (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString('pt-BR')
+// Número no formato do idioma (1 casa decimal abaixo de 100).
+const round = (n) => formatNumber(n >= 100 ? Math.round(n) : Math.round(n * 10) / 10)
 
 // A previsão de vazão é um modelo (GloFAS), sem valor de "cheia" por local.
 // Por isso o nível olha a tendência: quanto o rio deve subir nos próximos dias.
@@ -49,24 +51,24 @@ export function riverStatus(river, today) {
   const gain = peak - current
 
   let level
-  if (rise >= 3 && gain >= 30) level = { key: 'vermelho', label: 'Subida forte' }
-  else if (rise >= 2 && gain >= 10) level = { key: 'laranja', label: 'Subindo rápido' }
-  else if (rise >= 1.5 && gain >= 3) level = { key: 'amarelo', label: 'Subindo' }
-  else if (last != null && current > 0 && last < current * 0.7) level = { key: 'sem', label: 'Descendo' }
-  else level = { key: 'sem', label: 'Estável' }
+  if (rise >= 3 && gain >= 30) level = { key: 'vermelho', label: t('Subida forte') }
+  else if (rise >= 2 && gain >= 10) level = { key: 'laranja', label: t('Subindo rápido') }
+  else if (rise >= 1.5 && gain >= 3) level = { key: 'amarelo', label: t('Subindo') }
+  else if (last != null && current > 0 && last < current * 0.7) level = { key: 'sem', label: t('Descendo') }
+  else level = { key: 'sem', label: t('Estável') }
 
   const rising = level.key !== 'sem'
-  const [, month, day] = peakDate.split('-')
+  const peakOn = dayMonth(peakDate)
   const value = rising
-    ? `Vazão de ${round(current)} m³/s, com pico de ${round(peak)} m³/s previsto em ${day}/${month}`
-    : `Vazão de ${round(current)} m³/s, sem subida forte prevista nos próximos dias`
+    ? t('Vazão de {current} m³/s, com pico de {peak} m³/s previsto em {date}', { current: round(current), peak: round(peak), date: peakOn })
+    : t('Vazão de {current} m³/s, sem subida forte prevista nos próximos dias', { current: round(current) })
   return {
     level,
     value,
     headline: `${round(rising ? peak : current)} m³/s`,
     lines: rising
-      ? [`Pico previsto em ${day}/${month}`, `Hoje: ${round(current)} m³/s`]
-      : ['Vazão de hoje', 'Sem subida forte prevista'],
+      ? [t('Pico previsto em {date}', { date: peakOn }), t('Hoje: {current} m³/s', { current: round(current) })]
+      : [t('Vazão de hoje'), t('Sem subida forte prevista')],
   }
 }
 
@@ -76,20 +78,21 @@ export function fireStatus(fires) {
   const radius = fires.radiusKm || 50
   const near = fires.nearestKm
   let level
-  if (fires.count === 0) level = { key: 'sem', label: 'Nenhum foco' }
-  else if (fires.count <= 3 && (near == null || near > 10)) level = { key: 'amarelo', label: 'Poucos focos' }
-  else if (fires.count <= 15) level = { key: 'laranja', label: 'Vários focos' }
-  else level = { key: 'vermelho', label: 'Muitos focos' }
-  if (fires.count > 3 && fires.count <= 15 && near != null && near <= 5) level = { key: 'vermelho', label: 'Focos perto' }
+  if (fires.count === 0) level = { key: 'sem', label: t('Nenhum foco') }
+  else if (fires.count <= 3 && (near == null || near > 10)) level = { key: 'amarelo', label: t('Poucos focos') }
+  else if (fires.count <= 15) level = { key: 'laranja', label: t('Vários focos') }
+  else level = { key: 'vermelho', label: t('Muitos focos') }
+  if (fires.count > 3 && fires.count <= 15 && near != null && near <= 5) level = { key: 'vermelho', label: t('Focos perto') }
 
+  const one = fires.count === 1
   const value = fires.count === 0
-    ? `Nenhum foco de calor em ${radius} km${near != null ? ` (o mais próximo está a ${near} km)` : ''}`
-    : `${fires.count} ${fires.count === 1 ? 'foco' : 'focos'} de calor em ${radius} km${near != null ? ` · o mais próximo a ${near} km` : ''}`
+    ? t('Nenhum foco de calor em {radius} km', { radius }) + (near != null ? ` ${t('(o mais próximo está a {near} km)', { near })}` : '')
+    : t(one ? '{count} foco de calor em {radius} km' : '{count} focos de calor em {radius} km', { count: fires.count, radius }) + (near != null ? ` · ${t('o mais próximo a {near} km', { near })}` : '')
   return {
     level,
     value,
-    headline: fires.count === 0 ? 'Nenhum foco' : `${fires.count} ${fires.count === 1 ? 'foco' : 'focos'}`,
-    lines: [`De calor, em ${radius} km`, near != null ? `Mais próximo: ${near} km` : 'Nenhum num raio maior'],
+    headline: fires.count === 0 ? t('Nenhum foco') : t(one ? '{count} foco' : '{count} focos', { count: fires.count }),
+    lines: [t('De calor, em {radius} km', { radius }), near != null ? t('Mais próximo: {near} km', { near }) : t('Nenhum num raio maior')],
   }
 }
 
@@ -106,23 +109,23 @@ export function reservoirStatus(data) {
   if (!data || typeof data.percent !== 'number') return null
   const p = data.percent
   let level
-  if (p < 20) level = { key: 'vermelho', label: 'Crítico' }
-  else if (p < 35) level = { key: 'laranja', label: 'Baixo' }
-  else if (p < 50) level = { key: 'amarelo', label: 'Atenção' }
-  else level = { key: 'sem', label: 'Normal' }
+  if (p < 20) level = { key: 'vermelho', label: t('Crítico') }
+  else if (p < 35) level = { key: 'laranja', label: t('Baixo') }
+  else if (p < 50) level = { key: 'amarelo', label: t('Atenção') }
+  else level = { key: 'sem', label: t('Normal') }
 
-  const parts = [`Hidrelétricas do ${data.name}: ${round(p)}% cheios`]
+  const parts = [t('Hidrelétricas do {name}: {percent}% cheios', { name: data.name, percent: round(p) })]
   if (data.weekAgoPercent != null) {
     const delta = p - data.weekAgoPercent
-    if (Math.abs(delta) >= 1) parts.push(delta > 0 ? `subindo (${round(delta)} pontos em 7 dias)` : `caindo (${round(-delta)} pontos em 7 dias)`)
+    if (Math.abs(delta) >= 1) parts.push(delta > 0 ? t('subindo ({points} pontos em 7 dias)', { points: round(delta) }) : t('caindo ({points} pontos em 7 dias)', { points: round(-delta) }))
   }
-  if (data.lastYearPercent != null) parts.push(`no mesmo dia do ano passado: ${round(data.lastYearPercent)}%`)
-  const lines = [`Hidrelétricas do ${data.name}`]
+  if (data.lastYearPercent != null) parts.push(t('no mesmo dia do ano passado: {percent}%', { percent: round(data.lastYearPercent) }))
+  const lines = [t('Hidrelétricas do {name}', { name: data.name })]
   if (data.weekAgoPercent != null && Math.abs(p - data.weekAgoPercent) >= 1) {
     const delta = p - data.weekAgoPercent
-    lines.push(`${delta > 0 ? 'Subindo' : 'Caindo'} ${round(Math.abs(delta))} pontos em 7 dias`)
+    lines.push(t(delta > 0 ? 'Subindo {points} pontos em 7 dias' : 'Caindo {points} pontos em 7 dias', { points: round(Math.abs(delta)) }))
   }
-  if (data.lastYearPercent != null) lines.push(`Ano passado: ${round(data.lastYearPercent)}%`)
+  if (data.lastYearPercent != null) lines.push(t('Ano passado: {percent}%', { percent: round(data.lastYearPercent) }))
   return { level, value: parts.join(' · '), headline: `${round(p)}%`, lines }
 }
 
@@ -179,16 +182,16 @@ export function droughtStatus(archive) {
   const ratio = average > 0 ? current / average : 1
 
   let level
-  if (average < 30) level = { key: 'sem', label: 'Seco normal' }
-  else if (ratio >= 0.75) level = { key: 'sem', label: ratio > 1.25 ? 'Chuva acima' : 'Chuva normal' }
-  else if (ratio >= 0.5) level = { key: 'amarelo', label: 'Chuva abaixo' }
-  else if (ratio >= 0.25) level = { key: 'laranja', label: 'Bem abaixo' }
-  else level = { key: 'vermelho', label: 'Chuva escassa' }
+  if (average < 30) level = { key: 'sem', label: t('Seco normal') }
+  else if (ratio >= 0.75) level = { key: 'sem', label: ratio > 1.25 ? t('Chuva acima') : t('Chuva normal') }
+  else if (ratio >= 0.5) level = { key: 'amarelo', label: t('Chuva abaixo') }
+  else if (ratio >= 0.25) level = { key: 'laranja', label: t('Bem abaixo') }
+  else level = { key: 'vermelho', label: t('Chuva escassa') }
 
   return {
     level,
-    value: `Choveu ${Math.round(current)} mm nos últimos ${WINDOW} dias, ${Math.round(ratio * 100)}% da média (${Math.round(average)} mm)`,
-    headline: `${Math.round(ratio * 100)}% da média`,
-    lines: [`Choveu ${Math.round(current)} mm em ${WINDOW} dias`, `Média: ${Math.round(average)} mm`],
+    value: t('Choveu {mm} mm nos últimos {days} dias, {percent}% da média ({avg} mm)', { mm: Math.round(current), days: WINDOW, percent: Math.round(ratio * 100), avg: Math.round(average) }),
+    headline: t('{percent}% da média', { percent: Math.round(ratio * 100) }),
+    lines: [t('Choveu {mm} mm em {days} dias', { mm: Math.round(current), days: WINDOW }), t('Média: {avg} mm', { avg: Math.round(average) })],
   }
 }

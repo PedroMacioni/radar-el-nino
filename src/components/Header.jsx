@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react'
 import { LuHouse, LuLifeBuoy, LuMap } from 'react-icons/lu'
 import { APP_NAME } from '../lib/brand.js'
+import { LANGS, setLang, t, useLang } from '../lib/i18n.js'
 
 // A ordem aqui é a mesma da página: a marcação por rolagem depende disso.
+// `label` é o texto em português; a tradução é feita na hora de desenhar.
 const ITEMS = [
   { id: 'inicio', label: 'Início', Icon: LuHouse },
   { id: 'mapa', label: 'Mapa', Icon: LuMap },
   { id: 'ajuda', label: 'Pedir ajuda', Icon: LuLifeBuoy },
 ]
+
+const LANG_NAMES = { pt: 'Português', en: 'English' }
+
+// Troca de idioma: o botão do idioma atual fica marcado.
+function LangSwitch() {
+  const lang = useLang()
+  return (
+    <div className="langswitch" role="group" aria-label={t('Idioma')}>
+      {LANGS.map((code) => (
+        <button key={code} type="button" lang={code} aria-pressed={lang === code} title={LANG_NAMES[code]} aria-label={LANG_NAMES[code]} onClick={() => setLang(code)}>
+          {code.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 // Descobre em qual seção a pessoa está, para marcar a aba certa.
 function useActiveSection() {
@@ -42,6 +60,7 @@ function useActiveSection() {
 // standalone: em páginas fora da inicial (404, apoio) os links levam à página inicial (/);
 // nesse caso, `current` diz qual item fica marcado.
 export default function Header({ standalone = false, current = null }) {
+  useLang()
   const [scrolled, setActive] = useActiveSection()
   const base = standalone ? '/' : ''
   const active = standalone ? current : scrolled
@@ -55,14 +74,15 @@ export default function Header({ standalone = false, current = null }) {
           </svg>
           <span>{APP_NAME}</span>
         </a>
-        <nav aria-label="Principal" className="topbar__nav">
+        <nav aria-label={t('Principal')} className="topbar__nav">
           {ITEMS.map(({ id, label, Icon, page }) => (
             <a key={id} href={page || `${base}#${id}`} aria-current={active === id ? 'page' : undefined} onClick={() => setActive(id)}>
               <Icon size={18} aria-hidden="true" />
-              <span>{label}</span>
+              <span>{t(label)}</span>
             </a>
           ))}
         </nav>
+        <LangSwitch />
       </div>
     </header>
   )

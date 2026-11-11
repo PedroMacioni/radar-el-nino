@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { t, useLang } from '../lib/i18n.js'
 
 // Se uma parte da tela falhar, mostra o aviso no lugar dela em vez de apagar a página inteira.
 export default class ErrorBoundary extends Component {
@@ -19,13 +20,14 @@ export default class ErrorBoundary extends Component {
 
 // Tela de último recurso, se o app inteiro falhar. Mantém o caminho para o socorro.
 export function CrashScreen() {
+  useLang()
   return (
     <main className="crash">
-      <h1>Algo deu errado</h1>
-      <p>Recarregue a página. Em risco imediato, não espere: ligue 199.</p>
+      <h1>{t('Algo deu errado')}</h1>
+      <p>{t('Recarregue a página. Em risco imediato, não espere: ligue 199.')}</p>
       <div className="crash__actions">
-        <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
-        <a href="tel:199">Ligar 199</a>
+        <button type="button" onClick={() => window.location.reload()}>{t('Recarregar')}</button>
+        <a href="tel:199">{t('Ligar 199')}</a>
       </div>
     </main>
   )

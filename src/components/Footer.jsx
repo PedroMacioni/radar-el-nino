@@ -1,4 +1,5 @@
 import { LuArrowUp, LuHeart } from 'react-icons/lu'
+import { t, useLang } from '../lib/i18n.js'
 
 const EMERGENCY = [
   { number: '199', name: 'Defesa Civil' },
@@ -20,17 +21,18 @@ const SOURCES = [
 ]
 
 export default function Footer() {
+  useLang()
   return (
     <footer className="footer">
       <div className="container footer__inner">
         <div>
-          <p className="footer__title">Este site não substitui os avisos oficiais.</p>
-          <p>Confira sempre nos canais oficiais. Em risco imediato, ligue:</p>
+          <p className="footer__title">{t('Este site não substitui os avisos oficiais.')}</p>
+          <p>{t('Confira sempre nos canais oficiais. Em risco imediato, ligue:')}</p>
           <ul className="footer__calls">
             {EMERGENCY.map((e) => (
               <li key={e.number}>
-                <a href={`tel:${e.number}`} aria-label={`Ligar para ${e.name}, ${e.number}`}>
-                  <strong>{e.number}</strong> {e.name}
+                <a href={`tel:${e.number}`} aria-label={t('Ligar para {name}, {number}', { name: t(e.name), number: e.number })}>
+                  <strong>{e.number}</strong> {t(e.name)}
                 </a>
               </li>
             ))}
@@ -38,31 +40,32 @@ export default function Footer() {
         </div>
 
         <div>
-          <p className="footer__kicker">De onde vêm os dados</p>
+          <p className="footer__kicker">{t('De onde vêm os dados')}</p>
           <ul className="footer__sources">
             {SOURCES.map((s) => (
               <li key={s.name}>
                 <a href={s.href} target="_blank" rel="noreferrer">{s.name}</a>
-                <span>{s.what}</span>
+                <span>{t(s.what)}</span>
               </li>
             ))}
           </ul>
         </div>
 
         <div>
-          <p className="footer__kicker">Sem internet e privacidade</p>
-          <p className="footer__item"><strong>Sem sinal:</strong> a página abre mesmo offline e mostra a última previsão e o último aviso salvos, sempre com a data.</p>
-          <p className="footer__item"><strong>Seus dados:</strong> a cidade ou a localização que você informa é enviada às fontes ao lado só para buscar as informações. O aparelho guarda apenas a última cidade e os últimos dados. Não há conta nem cadastro.</p>
-          <p className="footer__item"><strong>Atualização:</strong> cada informação mostra a fonte. Use o botão de atualizar, ao lado do horário, para buscar de novo.</p>
+          <p className="footer__kicker">{t('Sem internet e privacidade')}</p>
+          <p className="footer__item"><strong>{t('Sem sinal:')}</strong> {t('a página abre mesmo offline e mostra a última previsão e o último aviso salvos, sempre com a data.')}</p>
+          <p className="footer__item"><strong>{t('Seus dados:')}</strong> {t('a cidade ou a localização que você informa é enviada às fontes ao lado só para buscar as informações. O aparelho guarda apenas a última cidade e os últimos dados. Não há conta nem cadastro.')}</p>
+          <p className="footer__item"><strong>{t('Atualização:')}</strong> {t('cada informação mostra a fonte. Use o botão de atualizar, ao lado do horário, para buscar de novo.')}</p>
+          <p className="footer__item"><strong>{t('Idioma:')}</strong> {t('os avisos oficiais (INMET) são publicados em português. Em inglês, traduzimos os textos mais comuns; o que aparecer em português é o original do órgão.')}</p>
         </div>
       </div>
 
       <div className="footer__bar">
         <div className="container footer__bar-inner">
-          <span>Projeto informativo sobre o El Niño. Os números são de modelos e fontes públicas.</span>
+          <span>{t('Projeto informativo sobre o El Niño. Os números são de modelos e fontes públicas.')}</span>
           <span className="footer__links">
-            <a className="footer__support" href="/apoie"><LuHeart size={16} aria-hidden="true" /> Apoie o projeto</a>
-            <a href="#inicio"><LuArrowUp size={16} aria-hidden="true" /> Voltar ao topo</a>
+            <a className="footer__support" href="/apoie"><LuHeart size={16} aria-hidden="true" /> {t('Apoie o projeto')}</a>
+            <a href="#inicio"><LuArrowUp size={16} aria-hidden="true" /> {t('Voltar ao topo')}</a>
           </span>
         </div>
       </div>

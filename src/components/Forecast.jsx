@@ -1,17 +1,18 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { LuCloud, LuCloudDrizzle, LuCloudFog, LuCloudLightning, LuCloudRain, LuCloudSun, LuDroplet, LuSun } from 'react-icons/lu'
 import { buildChart, rainLevel, tempColor } from '../lib/chart.js'
-import { dayMonth, dayTitle, formatMm, formatPercent, formatTemp, weekdayShort } from '../lib/format.js'
+import { dayMonth, dayTitle, formatHour, formatMm, formatPercent, formatTemp, weekdayShort } from '../lib/format.js'
+import { t, useLang } from '../lib/i18n.js'
 import { summarizeDay } from '../lib/daily.js'
 import { uvLevel } from '../lib/levels.js'
 import { splitPeriods } from '../lib/weather.js'
 import { useNarrow } from '../hooks.js'
 
-const hh = (hour) => `${String(hour).padStart(2, '0')}h`
+const hh = formatHour
 
 function dayLabel(date, index) {
-  if (index === 0) return 'Hoje'
-  if (index === 1) return 'Amanhã'
+  if (index === 0) return t('Hoje')
+  if (index === 1) return t('Amanhã')
   return weekdayShort(date)
 }
 
@@ -41,7 +42,7 @@ function DayTabs({ days, selected, onSelect }) {
   }, [selected])
 
   return (
-    <div className="tabs" ref={strip} role="group" aria-label="Escolha o dia">
+    <div className="tabs" ref={strip} role="group" aria-label={t('Escolha o dia')}>
       {days.map((day, index) => {
         const sum = summarizeDay(day.hours)
         const [Icon, color] = WEATHER_ICON[sum.weather]
@@ -56,7 +57,7 @@ function DayTabs({ days, selected, onSelect }) {
             className="daytab"
             aria-pressed={index === selected}
             onClick={() => onSelect(index)}
-            aria-label={`${label}, ${dayTitle(day.date)}. ${sum.weatherLabel}. Máxima ${formatTemp(sum.max)}, mínima ${formatTemp(sum.min)}. Chance de chuva ${formatPercent(sum.rainMax)}, ${formatMm(sum.rainTotal)}.`}
+            aria-label={t('{label}, {date}. {weather}. Máxima {max}, mínima {min}. Chance de chuva {chance}, {mm}.', { label, date: dayTitle(day.date), weather: sum.weatherLabel, max: formatTemp(sum.max), min: formatTemp(sum.min), chance: formatPercent(sum.rainMax), mm: formatMm(sum.rainTotal) })}
           >
             <span className="daytab__label">{label}</span>
             <span className="daytab__date mono">{dayMonth(day.date)}</span>
@@ -86,12 +87,12 @@ function Highlights({ hours, onPick }) {
   const rainHours = withRain.filter((h) => h.rainChance >= 50).length
   const level = wet ? rainLevel(wet.rainChance) : null
   const items = []
-  if (hot) items.push({ key: 'hot', label: 'Mais quente', value: formatTemp(hot.temp), sub: `às ${hh(hot.hour)}`, hour: hot.hour, color: tempColor(hot.temp) })
-  if (cold) items.push({ key: 'cold', label: 'Mais frio', value: formatTemp(cold.temp), sub: `às ${hh(cold.hour)}`, hour: cold.hour, color: tempColor(cold.temp) })
-  if (wet) items.push({ key: 'wet', label: 'Pico de chuva', value: formatPercent(wet.rainChance), sub: `às ${hh(wet.hour)}`, hour: wet.hour, color: level.color })
+  if (hot) items.push({ key: 'hot', label: t('Mais quente'), value: formatTemp(hot.temp), sub: t('às {hour}', { hour: hh(hot.hour) }), hour: hot.hour, color: tempColor(hot.temp) })
+  if (cold) items.push({ key: 'cold', label: t('Mais frio'), value: formatTemp(cold.temp), sub: t('às {hour}', { hour: hh(cold.hour) }), hour: cold.hour, color: tempColor(cold.temp) })
+  if (wet) items.push({ key: 'wet', label: t('Pico de chuva'), value: formatPercent(wet.rainChance), sub: t('às {hour}', { hour: hh(wet.hour) }), hour: wet.hour, color: level.color })
   items.push({
-    key: 'mm', label: 'Chuva no dia', value: formatMm(total),
-    sub: rainHours ? `${rainHours} h de chuva provável` : 'sem chuva provável',
+    key: 'mm', label: t('Chuva no dia'), value: formatMm(total),
+    sub: rainHours ? t('{hours} h de chuva provável', { hours: rainHours }) : t('sem chuva provável'),
     hour: wet?.hour, color: total > 0 ? '#2f7fc4' : '#c4cbd2',
   })
   return (
@@ -111,7 +112,7 @@ function Highlights({ hours, onPick }) {
 
 // Painel fixo com os detalhes da hora escolhida (passando o mouse, tocando ou usando as setas).
 function HourDetail({ hour, isNow }) {
-  if (!hour) return <div className="detail detail--empty">Sem dados para esta hora.</div>
+  if (!hour) return <div className="detail detail--empty">{t('Sem dados para esta hora.')}</div>
   const rain = rainLevel(hour.rainChance)
   const uv = uvLevel(hour.uv)
   // "13,1 mm" vira número + unidade, para a unidade ficar menor.
@@ -121,24 +122,24 @@ function HourDetail({ hour, isNow }) {
     <div className="detail" aria-live="polite">
       <div className="detail__when">
         <span className="detail__hour mono">{hh(hour.hour)}</span>
-        {isNow && <span className="detail__now">Agora</span>}
+        {isNow && <span className="detail__now">{t('Agora')}</span>}
       </div>
       <div className="detail__temp">
         <span className="detail__big mono" style={{ color: tempColor(hour.temp) }}>{formatTemp(hour.temp)}</span>
-        <span className="detail__small">Sensação {formatTemp(hour.feels)}</span>
+        <span className="detail__small">{t('Sensação {value}', { value: formatTemp(hour.feels) })}</span>
       </div>
       <span className="badge detail__level" style={{ background: rain.color, color: rain.ink }}>{rain.label}</span>
       <dl className="detail__stats">
         <div>
-          <dt>Chance</dt>
+          <dt>{t('Chance')}</dt>
           <dd className="mono">{formatPercent(hour.rainChance)}</dd>
         </div>
         <div>
-          <dt>Volume</dt>
+          <dt>{t('Volume')}</dt>
           <dd className="mono">{mmNumber}{mmUnit && <small className="now-grid__unit"> {mmUnit}</small>}</dd>
         </div>
         <div>
-          <dt>Índice UV</dt>
+          <dt>{t('Índice UV')}</dt>
           <dd className="mono">{hour.uv == null ? '–' : Math.round(hour.uv * 10) / 10}{uv && <small className="now-grid__unit"> {uv.label}</small>}</dd>
         </div>
       </dl>
@@ -176,7 +177,7 @@ function Chart({ hours, nowHour, narrow, activeHour, onPick, onLeave }) {
 
   return (
     <div className="chart-wrap" tabIndex={0} role="group" onKeyDown={handleKey}
-      aria-label="Gráfico da temperatura (linha) e da chance de chuva (barras). Use as setas para esquerda e direita para ver cada hora.">
+      aria-label={t('Gráfico da temperatura (linha) e da chance de chuva (barras). Use as setas para esquerda e direita para ver cada hora.')}>
       <svg ref={svgRef} viewBox={`0 0 ${c.width} ${c.height}`} width="100%" className="chart"
         onPointerMove={handlePointer} onPointerDown={handlePointer}
         onPointerLeave={(e) => e.pointerType === 'mouse' && onLeave()}>
@@ -201,7 +202,7 @@ function Chart({ hours, nowHour, narrow, activeHour, onPick, onLeave }) {
         {c.nowX != null && (
           <g>
             <line x1={c.nowX} x2={c.nowX} y1={c.top - 6} y2={c.bottom} stroke="#0F1B26" strokeWidth="1.5" strokeDasharray="4 3" />
-            <text x={c.nowX} y={c.top - 12} textAnchor="middle" style={{ ...font, fill: '#0F1B26', fontFamily: 'Public Sans, sans-serif', fontWeight: 700 }}>Agora</text>
+            <text x={c.nowX} y={c.top - 12} textAnchor="middle" style={{ ...font, fill: '#0F1B26', fontFamily: 'Public Sans, sans-serif', fontWeight: 700 }}>{t('Agora')}</text>
           </g>
         )}
         {active && (
@@ -230,9 +231,9 @@ function Periods({ hours, isToday, nowHour, activeHour, onPick, onLeave }) {
               const cls = `cell${isNow ? ' cell--now' : ''}${h.hour === activeHour ? ' cell--active' : ''}`
               return (
                 <button key={h.time} type="button" className={cls} style={{ '--temp': tempColor(h.temp) }}
-                  aria-label={`${hh(h.hour)}: ${formatTemp(h.temp)}, chance de chuva ${formatPercent(h.rainChance)}`}
+                  aria-label={t('{hour}: {temp}, chance de chuva {chance}', { hour: hh(h.hour), temp: formatTemp(h.temp), chance: formatPercent(h.rainChance) })}
                   onMouseEnter={() => onPick(h.hour)} onMouseLeave={onLeave} onFocus={() => onPick(h.hour)} onClick={() => onPick(h.hour)}>
-                  <span className="cell__hour mono">{isNow ? 'Agora' : hh(h.hour)}</span>
+                  <span className="cell__hour mono">{isNow ? t('Agora') : hh(h.hour)}</span>
                   <span className="cell__temp mono">{formatTemp(h.temp)}</span>
                   <span className="cell__rain mono" style={{ background: rain.color, color: rain.ink }}>{formatPercent(h.rainChance)}</span>
                 </button>
@@ -250,10 +251,10 @@ function Legend() {
   return (
     <div className="legend">
       <span>
-        <i className="legend__temp" aria-hidden="true" />Temperatura (°C): azul = frio, vermelho = calor
+        <i className="legend__temp" aria-hidden="true" />{t('Temperatura (°C): azul = frio, vermelho = calor')}
       </span>
       <span>
-        Chance de chuva:
+        {t('Chance de chuva:')}
         {levels.map((l) => (
           <span key={l.key} className="legend__chip"><i style={{ background: l.color }} aria-hidden="true" />{l.key === 'low' ? '< 20%' : l.key === 'some' ? '20–49%' : l.key === 'likely' ? '50–69%' : '≥ 70%'}</span>
         ))}
@@ -263,6 +264,7 @@ function Legend() {
 }
 
 export default function Forecast({ days, nowHour, sun }) {
+  useLang()
   const [selected, setSelected] = useState(0)
   const [picked, setPicked] = useState(null)
   const narrow = useNarrow()
@@ -278,20 +280,20 @@ export default function Forecast({ days, nowHour, sun }) {
   const clear = () => setPicked(null)
   return (
     <section aria-labelledby="t-prev">
-      <h2 id="t-prev" className="section-title">Previsão hora a hora</h2>
+      <h2 id="t-prev" className="section-title">{t('Previsão hora a hora')}</h2>
       <DayTabs days={days} selected={selected} onSelect={setSelected} />
       <p className="forecast__date" aria-live="polite">{dayTitle(day.date)}</p>
       <Highlights hours={day.hours} onPick={setPicked} />
       <div className="chartbox">
         <HourDetail hour={activeData} isNow={isToday && activeHour === nowHour} />
         <Chart hours={day.hours} nowHour={isToday ? nowHour : null} narrow={narrow} activeHour={activeHour} onPick={setPicked} onLeave={clear} />
-        <p className="chart__hint">Passe o mouse, toque ou use as setas ← → para ver cada hora.</p>
+        <p className="chart__hint">{t('Passe o mouse, toque ou use as setas ← → para ver cada hora.')}</p>
         <Legend />
       </div>
       <Periods hours={day.hours} isToday={isToday} nowHour={nowHour} activeHour={activeHour} onPick={setPicked} onLeave={clear} />
       <p className="note">
-        Em cada hora: temperatura e chance de chuva.
-        {sun && <> Nascer do sol {sun.rise} · Pôr do sol {sun.set} (hoje).</>} Fonte: Open-Meteo.
+        {t('Em cada hora: temperatura e chance de chuva.')}
+        {sun && <> {t('Nascer do sol {rise} · Pôr do sol {set} (hoje).', { rise: sun.rise, set: sun.set })}</>} {t('Fonte: Open-Meteo.')}
       </p>
     </section>
   )

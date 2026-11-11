@@ -1,5 +1,6 @@
-import { formatDateTime } from './format.js'
+import { formatDateTime, formatMm as formatMmBase } from './format.js'
 import { coordsQuery } from './geo.js'
+import { t } from './i18n.js'
 
 export async function fetchMapData(lat, lon, fetchImpl = fetch) {
   const response = await fetchImpl(`/api/mapa?${coordsQuery(lat, lon)}`)
@@ -15,7 +16,13 @@ export function distanceKm(lat1, lon1, lat2, lon2) {
   return 6371 * 2 * Math.asin(Math.sqrt(a))
 }
 
-export const SEVERITY_LABEL = { vermelho: 'vermelho', laranja: 'laranja', amarelo: 'amarelo', desconhecido: 'do INMET' }
+// Lido na hora (getters) para acompanhar o idioma. 'do INMET' completa a frase "Aviso ...".
+export const SEVERITY_LABEL = {
+  get vermelho() { return t('vermelho') },
+  get laranja() { return t('laranja') },
+  get amarelo() { return t('amarelo') },
+  get desconhecido() { return t('do INMET') },
+}
 
 // Frase que responde à pergunta do mapa: "estou numa área de aviso e o que tem perto de mim?"
 export function describeMap(data, place, radiusKm = 50) {
@@ -23,23 +30,23 @@ export function describeMap(data, place, radiusKm = 50) {
   let headline
   let level = null
   if (areas == null) {
-    headline = 'Não foi possível consultar as áreas de aviso agora. Confira no portal do INMET.'
+    headline = t('Não foi possível consultar as áreas de aviso agora. Confira no portal do INMET.')
   } else {
     const inside = areas.filter((area) => area.inside)
     if (inside.length > 0) {
       const top = inside[0]
-      const label = SEVERITY_LABEL[top.severity] || 'do INMET'
-      const until = top.end ? ` até ${formatDateTime(top.end)}` : ''
+      const label = SEVERITY_LABEL[top.severity] || t('do INMET')
+      const until = top.end ? ` ${t('até {date}', { date: formatDateTime(top.end) })}` : ''
       level = top.severity === 'desconhecido' ? null : top.severity
       headline = top.when === 'hoje' || !top.when
-        ? `Você está dentro de uma área de aviso ${label}${until}.`
-        : `A sua área tem um aviso ${label} previsto${until}.`
+        ? t('Você está dentro de uma área de aviso {label}{until}.', { label, until })
+        : t('A sua área tem um aviso {label} previsto{until}.', { label, until })
     } else if (areas.length > 0) {
       const many = areas.length > 1
-      headline = `Há ${areas.length} ${many ? 'áreas de aviso' : 'área de aviso'} por perto, mas o seu local não está dentro ${many ? 'delas' : 'dela'}.`
+      headline = t(many ? 'Há {count} áreas de aviso por perto, mas o seu local não está dentro delas.' : 'Há {count} área de aviso por perto, mas o seu local não está dentro dela.', { count: areas.length })
     } else {
       level = 'sem'
-      headline = 'Nenhuma área de aviso por perto agora.'
+      headline = t('Nenhuma área de aviso por perto agora.')
     }
   }
 
@@ -49,7 +56,7 @@ export function describeMap(data, place, radiusKm = 50) {
   if (points) {
     const near = place ? points.filter(([lat, lon]) => distanceKm(place.lat, place.lon, lat, lon) <= radiusKm).length : points.length
     firesCount = near
-    firesLine = near === 0 ? `Nenhum foco de calor em ${radiusKm} km.` : `${near} ${near === 1 ? 'foco de calor' : 'focos de calor'} em ${radiusKm} km.`
+    firesLine = near === 0 ? t('Nenhum foco de calor em {radius} km.', { radius: radiusKm }) : t(near === 1 ? '{count} foco de calor em {radius} km.' : '{count} focos de calor em {radius} km.', { count: near, radius: radiusKm })
   }
   return { headline, level, firesLine, firesCount }
 }
@@ -57,7 +64,12 @@ export function describeMap(data, place, radiusKm = 50) {
 // Identifica uma área (o INMET manda um id por aviso).
 export const areaKey = (area, index) => String(area.id ?? `a${index}`)
 
-export const LEVEL_NAME = { vermelho: 'Vermelho', laranja: 'Laranja', amarelo: 'Amarelo', desconhecido: 'INMET' }
+export const LEVEL_NAME = {
+  get vermelho() { return t('Vermelho') },
+  get laranja() { return t('Laranja') },
+  get amarelo() { return t('Amarelo') },
+  desconhecido: 'INMET',
+}
 
 // ---------- Chuva prevista nas próximas 24 h (grade de pontos ao redor do local) ----------
 
@@ -104,11 +116,11 @@ export async function fetchRain(lat, lon, fetchImpl = fetch) {
 
 // Faixas de chuva em 24 h (mm). A de baixo não é desenhada, para o mapa não ficar todo colorido.
 export const RAIN_BINS = [
-  { min: 60, key: 'extrema', label: '60 mm ou mais', color: '#54278f' },
-  { min: 30, key: 'muito-forte', label: '30 a 60 mm', color: '#6a51a3' },
-  { min: 15, key: 'forte', label: '15 a 30 mm', color: '#2171b5' },
-  { min: 5, key: 'moderada', label: '5 a 15 mm', color: '#4292c6' },
-  { min: 1, key: 'fraca', label: '1 a 5 mm', color: '#9ecae1' },
+  { min: 60, key: 'extrema', get label() { return t('60 mm ou mais') }, color: '#54278f' },
+  { min: 30, key: 'muito-forte', get label() { return t('30 a 60 mm') }, color: '#6a51a3' },
+  { min: 15, key: 'forte', get label() { return t('15 a 30 mm') }, color: '#2171b5' },
+  { min: 5, key: 'moderada', get label() { return t('5 a 15 mm') }, color: '#4292c6' },
+  { min: 1, key: 'fraca', get label() { return t('1 a 5 mm') }, color: '#9ecae1' },
 ]
 
 export function rainBin(mm) {
@@ -132,9 +144,8 @@ export function summarizeRain(rain, place) {
   return { here: here.mm, max: max.mm }
 }
 
-export function formatMm(mm) {
-  return `${(Math.round(mm * 10) / 10).toLocaleString('pt-BR')} mm`
-}
+// Mesmo formato de format.js (14,5 mm em português, 14.5 mm em inglês).
+export const formatMm = formatMmBase
 
 // Resumo das áreas: quantas, de que nível e quantas atingem o local.
 export function summarizeAreas(areas) {

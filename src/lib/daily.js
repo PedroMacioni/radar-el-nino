@@ -1,17 +1,19 @@
+import { t } from './i18n.js'
+
 // Resumo de um dia para os cartões da previsão: máxima, mínima, chance e volume de chuva e o tempo.
 
 // Do menos para o mais grave. O ícone do dia é o mais grave que aparece de verdade durante o dia.
 const ORDER = ['limpo', 'parcial', 'nublado', 'neblina', 'garoa', 'chuva', 'chuva-forte', 'trovoada']
 
 export const WEATHER = {
-  limpo: { label: 'Céu limpo' },
-  parcial: { label: 'Parcialmente nublado' },
-  nublado: { label: 'Nublado' },
-  neblina: { label: 'Neblina' },
-  garoa: { label: 'Garoa' },
-  chuva: { label: 'Chuva' },
-  'chuva-forte': { label: 'Chuva forte' },
-  trovoada: { label: 'Trovoada' },
+  limpo: { get label() { return t('Céu limpo') } },
+  parcial: { get label() { return t('Parcialmente nublado') } },
+  nublado: { get label() { return t('Nublado') } },
+  neblina: { get label() { return t('Neblina') } },
+  garoa: { get label() { return t('Garoa') } },
+  chuva: { get label() { return t('Chuva') } },
+  'chuva-forte': { get label() { return t('Chuva forte') } },
+  trovoada: { get label() { return t('Trovoada') } },
 }
 
 // Código de tempo da Open-Meteo (padrão WMO) para o nosso grupo.

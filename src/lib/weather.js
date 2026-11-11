@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
 const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 
@@ -59,9 +61,12 @@ export const PERIODS = [
   { name: 'Noite', range: '18h às 23h', from: 18 },
 ]
 
+// Os nomes e as faixas ficam em português nos dados; a tradução é feita aqui, na exibição.
 export function splitPeriods(hours) {
   return PERIODS.map((period) => ({
     ...period,
+    name: t(period.name),
+    range: t(period.range),
     hours: hours.filter((h) => h.hour >= period.from && h.hour < period.from + 6),
   }))
 }

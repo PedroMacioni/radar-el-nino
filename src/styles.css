@@ -44,6 +44,14 @@ html { scroll-behavior: smooth; }
 .topbar__nav a:hover { color: #fff; }
 .topbar__nav a[aria-current='page'] { font-weight: 700; color: #fff; }
 .topbar__nav a:focus-visible { outline-color: #fff; border-radius: 4px; }
+.topbar__nav { margin-left: auto; }
+/* Troca de idioma (PT | EN) */
+.langswitch { display: inline-flex; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 8px; overflow: hidden; }
+.langswitch button { min-width: 40px; min-height: 36px; padding: 0 8px; border: 0; background: transparent; color: #aebfd0; font: inherit; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
+.langswitch button + button { border-left: 1px solid rgba(255, 255, 255, 0.35); }
+.langswitch button:hover { color: #fff; }
+.langswitch button[aria-pressed='true'] { background: #fff; color: var(--brand); }
+.langswitch button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 
 /* Busca */
 .searchbar { background: var(--surface); border-bottom: 1px solid var(--rule); }
@@ -233,6 +241,9 @@ html { scroll-behavior: smooth; }
   .container { padding: 0 20px; }
   .topbar__inner { padding-top: 8px; padding-bottom: 8px; }
   .topbar__inner { justify-content: center; }
+  .topbar__inner { position: relative; }
+  .langswitch { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); }
+  .langswitch button { min-width: 34px; min-height: 32px; padding: 0 6px; font-size: 12px; }
   .brand { font-size: 17px; justify-content: center; }
   /* Abas fixas embaixo, como num app. O espaço no fim da página evita que cubram o rodapé. */
   :root { --tabbar: 62px; }

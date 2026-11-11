@@ -3,6 +3,7 @@ import {
 } from 'react-icons/lu'
 import { airAdvice, airLevel, uvAdvice, uvLevel } from '../lib/levels.js'
 import { formatTemp } from '../lib/format.js'
+import { t, useLang } from '../lib/i18n.js'
 import { droughtStatus, fireStatus, reservoirStatus, riverStatus } from '../lib/environment.js'
 
 // Do mais grave para o menos grave: o que pede atenção aparece primeiro.
@@ -13,9 +14,9 @@ const LEVEL_ICON = { sem: LuCircleCheck, amarelo: LuCircleAlert, laranja: LuTria
 
 // Resultado de uma consulta extra: carregando, com dado, ou sem dado agora.
 function extra(state, build) {
-  if (!state || state.status === 'loading') return { pending: 'Consultando…' }
+  if (!state || state.status === 'loading') return { pending: t('Consultando…') }
   const built = state.status === 'ok' ? build(state.data) : null
-  return built || { pending: 'Sem dado agora para este local' }
+  return built || { pending: t('Sem dado agora para este local') }
 }
 
 function Chip({ level }) {
@@ -32,7 +33,7 @@ function Chip({ level }) {
 function Gauge({ value, max, labels }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
-    <div className="gauge" role="img" aria-label={`Índice ${Math.round(value)}, numa escala de 0 a ${max}`}>
+    <div className="gauge" role="img" aria-label={t('Índice {value}, numa escala de 0 a {max}', { value: Math.round(value), max })}>
       <div className="gauge__bar"><span className="gauge__mark" style={{ left: `${pct}%` }} /></div>
       <div className="gauge__labels"><span>{labels[0]}</span><span>{labels[1]}</span></div>
     </div>
@@ -58,48 +59,49 @@ function Card({ name, Icon, color, level, headline, sentence, lines = [], gauge,
           {note && <p className="ind__note">{note}</p>}
         </>
       )}
-      <p className="ind__source">Fonte: {source}</p>
+      <p className="ind__source">{t('Fonte: {source}', { source: t(source) })}</p>
     </li>
   )
 }
 
 function airCard(air) {
   if (!air || air.eaqi == null) {
-    return { name: 'Ar', Icon: LuCloudFog, color: '#4f6bd8', pending: 'Sem dado para este local', source: 'Open-Meteo (CAMS)' }
+    return { name: t('Ar'), Icon: LuCloudFog, color: '#4f6bd8', pending: t('Sem dado para este local'), source: 'Open-Meteo (CAMS)' }
   }
   const level = airLevel(air.eaqi)
   const advice = airAdvice(air.eaqi)
   return {
-    name: 'Ar',
+    name: t('Ar'),
     Icon: LuCloudFog,
     color: '#4f6bd8',
-    level: { ...level, label: level.label === 'Extremamente ruim' ? 'Péssima' : level.label },
+    level: { ...level, label: air.eaqi > 100 ? t('Péssima') : level.label },
     sentence: advice.headline,
     lines: advice.care ? [advice.care] : [],
-    gauge: { value: air.eaqi, max: 120, labels: ['Boa', 'Péssima'] },
-    note: `Índice ${Math.round(air.eaqi)}${air.pm25 != null ? ` · partículas finas no ar (PM2,5): ${Math.round(air.pm25)} µg/m³` : ''}`,
+    gauge: { value: air.eaqi, max: 120, labels: [t('Boa'), t('Péssima')] },
+    note: t('Índice {value}', { value: Math.round(air.eaqi) }) + (air.pm25 != null ? ` · ${t('partículas finas no ar (PM2,5): {value} µg/m³', { value: Math.round(air.pm25) })}` : ''),
     source: 'Open-Meteo (CAMS)',
   }
 }
 
 export default function Indicators({ now, air, today, river, fires, reservoirs, drought }) {
+  useLang()
   const uv = uvLevel(now.uv)
   const cards = [
-    { name: 'Rios', Icon: LuWaves, color: '#1560bd', ...extra(river, (data) => riverStatus(data, today)), source: 'Open-Meteo (GloFAS), previsão por modelo' },
-    { name: 'Reservatórios', Icon: LuDam, color: '#0e7c8c', ...extra(reservoirs, reservoirStatus), source: 'ONS, volume da região' },
-    { name: 'Seca', Icon: LuSun, color: '#b45309', ...extra(drought, droughtStatus), source: 'Open-Meteo (ERA5), chuva contra a média' },
+    { name: t('Rios'), Icon: LuWaves, color: '#1560bd', ...extra(river, (data) => riverStatus(data, today)), source: 'Open-Meteo (GloFAS), previsão por modelo' },
+    { name: t('Reservatórios'), Icon: LuDam, color: '#0e7c8c', ...extra(reservoirs, reservoirStatus), source: 'ONS, volume da região' },
+    { name: t('Seca'), Icon: LuSun, color: '#b45309', ...extra(drought, droughtStatus), source: 'Open-Meteo (ERA5), chuva contra a média' },
     {
-      name: 'Calor e UV',
+      name: t('Calor e UV'),
       Icon: LuThermometerSun,
       color: '#d97706',
-      level: uv && { ...uv, label: `UV ${uv.label.toLowerCase()}` },
-      headline: `Sensação ${formatTemp(now.feels)}`,
+      level: uv && { ...uv, label: t('UV {level}', { level: uv.label.toLowerCase() }) },
+      headline: t('Sensação {value}', { value: formatTemp(now.feels) }),
       sentence: uvAdvice(now.uv),
-      note: now.uv == null ? null : `Índice UV ${Math.round(now.uv)} (vai de 0 a 11 ou mais)`,
+      note: now.uv == null ? null : t('Índice UV {value} (vai de 0 a 11 ou mais)', { value: Math.round(now.uv) }),
       source: 'Open-Meteo',
     },
     airCard(air),
-    { name: 'Queimadas', Icon: LuFlame, color: '#dc5a1c', ...extra(fires, fireStatus), source: 'INPE Queimadas, focos de hoje' },
+    { name: t('Queimadas'), Icon: LuFlame, color: '#dc5a1c', ...extra(fires, fireStatus), source: 'INPE Queimadas, focos de hoje' },
   ]
   const sorted = cards
     .map((card, index) => ({ card, index }))
@@ -108,8 +110,8 @@ export default function Indicators({ now, air, today, river, fires, reservoirs, 
 
   return (
     <section aria-labelledby="t-ind">
-      <h2 id="t-ind" className="section-title">Água, seca, ar e fogo</h2>
-      <p className="muted small ind__intro">O que pede mais atenção aparece primeiro.</p>
+      <h2 id="t-ind" className="section-title">{t('Água, seca, ar e fogo')}</h2>
+      <p className="muted small ind__intro">{t('O que pede mais atenção aparece primeiro.')}</p>
       <ul className="ind-grid">
         {sorted.map((card) => <Card key={card.name} {...card} />)}
       </ul>

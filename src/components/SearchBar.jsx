@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { LuLoaderCircle, LuLocateFixed, LuSearch } from 'react-icons/lu'
 import { getBrowserPosition, isCep, placeLabel, resolveQuery, searchCities } from '../lib/geo.js'
+import { t, useLang } from '../lib/i18n.js'
 
 export default function SearchBar({ onSelect }) {
+  useLang()
   const [text, setText] = useState('')
   const [options, setOptions] = useState([])
   const [suggestions, setSuggestions] = useState([])
@@ -51,11 +53,11 @@ export default function SearchBar({ onSelect }) {
     setSuggestions([])
     try {
       const { places, message: info } = await resolveQuery(text)
-      if (places.length === 0) setMessage(info || 'Não encontramos essa cidade. Confira o nome ou digite o CEP.')
+      if (places.length === 0) setMessage(info || t('Não encontramos essa cidade. Confira o nome ou digite o CEP.'))
       else if (places.length === 1) choose(places[0])
       else setOptions(places)
     } catch {
-      setMessage('Não foi possível buscar agora. Verifique a conexão e tente de novo.')
+      setMessage(t('Não foi possível buscar agora. Verifique a conexão e tente de novo.'))
     } finally {
       setBusy(false)
     }
@@ -99,7 +101,7 @@ export default function SearchBar({ onSelect }) {
     <div className="searchbar">
       <div className="container searchbar__inner">
         <form className="searchbar__form" onSubmit={handleSubmit} role="search">
-          <label htmlFor="busca" className="sr-only">Cidade ou CEP</label>
+          <label htmlFor="busca" className="sr-only">{t('Cidade ou CEP')}</label>
           <div className="searchbar__field">
             <LuSearch className="searchbar__icon" size={20} aria-hidden="true" />
             <input
@@ -107,7 +109,7 @@ export default function SearchBar({ onSelect }) {
               type="text"
               inputMode="search"
               autoComplete="off"
-              placeholder="Cidade ou CEP"
+              placeholder={t('Cidade ou CEP')}
               value={text}
               role="combobox"
               aria-expanded={open}
@@ -131,18 +133,18 @@ export default function SearchBar({ onSelect }) {
               </ul>
             )}
           </div>
-          <button type="submit" disabled={busy}>{busy && !locating ? 'Buscando…' : 'Buscar'}</button>
+          <button type="submit" disabled={busy}>{busy && !locating ? t('Buscando…') : t('Buscar')}</button>
         </form>
         <button type="button" className="locate" onClick={handleLocation} disabled={busy}>
           {locating ? <LuLoaderCircle className="spin" size={20} aria-hidden="true" /> : <LuLocateFixed size={20} aria-hidden="true" />}
-          <span>{locating ? 'Localizando…' : 'Usar minha localização'}</span>
+          <span>{locating ? t('Localizando…') : t('Usar minha localização')}</span>
         </button>
       </div>
       <div className="container" aria-live="polite">
         {message && <p className="searchbar__message">{message}</p>}
         {options.length > 0 && (
           <div className="searchbar__options">
-            <p>Qual destas?</p>
+            <p>{t('Qual destas?')}</p>
             <ul>
               {options.map((place) => (
                 <li key={place.id}>

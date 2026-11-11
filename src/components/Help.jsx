@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { LuChevronDown, LuDroplets, LuCheck, LuHeartPulse, LuPhoneCall, LuTent, LuTractor, LuWallet, LuWheat } from 'react-icons/lu'
+import { t, useLang } from '../lib/i18n.js'
 
+// Textos em português; a tradução é feita na hora de desenhar.
 // Números de emergência: um toque para ligar.
 const NUMBERS = [
   { number: '199', name: 'Defesa Civil', text: 'Enchente, deslizamento, risco' },
@@ -66,6 +68,7 @@ const TOPICS = [
 ]
 
 export default function Help() {
+  useLang()
   // Depois do toque, o cartão confirma por alguns segundos (no computador o telefone pode não abrir).
   const [calling, setCalling] = useState(null)
   function handleCall(number) {
@@ -74,45 +77,45 @@ export default function Help() {
   }
   return (
     <section id="ajuda" aria-labelledby="t-aj" className="help">
-      <h2 id="t-aj" className="section-title">Como pedir ajuda</h2>
+      <h2 id="t-aj" className="section-title">{t('Como pedir ajuda')}</h2>
 
-      <h3 className="help__sub">Em emergência, ligue</h3>
+      <h3 className="help__sub">{t('Em emergência, ligue')}</h3>
       <ul className="numbers">
         {NUMBERS.map((n) => (
           <li key={n.number}>
             <div className={`number${n.number === '199' ? ' number--main' : ''}`}>
               <span className="number__value">{n.number}</span>
-              <span className="number__name">{n.name}</span>
-              <span className="number__text">{n.text}</span>
-              <a className="number__cta" href={`tel:${n.number}`} onClick={() => handleCall(n.number)} aria-label={`Ligar para ${n.name}, ${n.number}`}>
+              <span className="number__name">{t(n.name)}</span>
+              <span className="number__text">{t(n.text)}</span>
+              <a className="number__cta" href={`tel:${n.number}`} onClick={() => handleCall(n.number)} aria-label={t('Ligar para {name}, {number}', { name: t(n.name), number: n.number })}>
                 {calling === n.number
-                  ? <><LuCheck size={18} aria-hidden="true" /> Ligando…</>
-                  : <><LuPhoneCall size={18} aria-hidden="true" /><span>Ligar<span className="number__now"> agora</span></span></>}
+                  ? <><LuCheck size={18} aria-hidden="true" /> {t('Ligando…')}</>
+                  : <><LuPhoneCall size={18} aria-hidden="true" /><span>{t('Ligar')}<span className="number__now"> {t('agora')}</span></span></>}
               </a>
             </div>
           </li>
         ))}
       </ul>
 
-      <h3 className="help__sub">Programas e orientações</h3>
+      <h3 className="help__sub">{t('Programas e orientações')}</h3>
       <div className="topics">
         {TOPICS.map(({ title, Icon, summary, rows }) => (
           <details key={title} className="topic">
             <summary className="topic__summary">
               <span className="topic__icon" aria-hidden="true"><Icon size={18} /></span>
               <span className="topic__text">
-                <span className="topic__title">{title}</span>
-                <span className="topic__hint">{summary}</span>
+                <span className="topic__title">{t(title)}</span>
+                <span className="topic__hint">{t(summary)}</span>
               </span>
               <LuChevronDown className="topic__chev" size={20} aria-hidden="true" />
             </summary>
             <dl className="dl topic__body">
-              {rows.map(([dt, dd]) => <div key={dt}><dt>{dt}</dt><dd>{dd}</dd></div>)}
+              {rows.map(([dt, dd]) => <div key={dt}><dt>{t(dt)}</dt><dd>{t(dd)}</dd></div>)}
             </dl>
           </details>
         ))}
       </div>
-      <p className="note">As regras mudam por estado, município e ano. Confirme na Defesa Civil ou na prefeitura antes de ir.</p>
+      <p className="note">{t('As regras mudam por estado, município e ano. Confirme na Defesa Civil ou na prefeitura antes de ir.')}</p>
     </section>
   )
 }

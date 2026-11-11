@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { FaWhatsapp } from 'react-icons/fa6'
 import { LuCheck, LuCopy, LuInfo, LuMessageSquareText, LuPhoneCall } from 'react-icons/lu'
+import { t, useLang } from '../lib/i18n.js'
 
+// Textos em português; a tradução é feita na hora de desenhar.
 const CHANNELS = [
   {
     key: 'sms', Icon: LuMessageSquareText, name: 'SMS', value: '40199', copy: '40199',
@@ -32,46 +34,47 @@ function CopyButton({ value, label }) {
     }
   }
   return (
-    <button type="button" className="channel__copy" onClick={copy} aria-label={done ? 'Número copiado' : `Copiar ${label}`} title={done ? 'Copiado!' : 'Copiar número'}>
+    <button type="button" className="channel__copy" onClick={copy} aria-label={done ? t('Número copiado') : t('Copiar {label}', { label })} title={done ? t('Copiado!') : t('Copiar número')}>
       {done ? <LuCheck size={20} aria-hidden="true" /> : <LuCopy size={20} aria-hidden="true" />}
     </button>
   )
 }
 
 export default function SideInfo({ compact = false }) {
+  useLang()
   return (
     <aside className="side">
       <section className="panel" id="offline" aria-labelledby="t-off">
-        <h2 id="t-off">Sem internet ou sem sinal</h2>
-        <p className="muted small">Escolha um canal. Os avisos chegam pelo seu CEP.</p>
+        <h2 id="t-off">{t('Sem internet ou sem sinal')}</h2>
+        <p className="muted small">{t('Escolha um canal. Os avisos chegam pelo seu CEP.')}</p>
         <ul className="channels">
           {CHANNELS.map((c) => (
             <li key={c.key} className={`channel channel--${c.key}`}>
               <div className="channel__head">
                 <span className="channel__icon" aria-hidden="true"><c.Icon size={18} /></span>
-                <span className="channel__name">{c.name}</span>
+                <span className="channel__name">{t(c.name)}</span>
               </div>
               <div className="channel__value mono">{c.value}</div>
-              <p className="channel__text">{c.text} <span className="channel__tag">{c.tag}.</span></p>
+              <p className="channel__text">{t(c.text)} <span className="channel__tag">{t(c.tag)}.</span></p>
               <div className="channel__actions">
-                <a className="channel__go" href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">{c.action}</a>
-                <CopyButton value={c.copy} label={`número do ${c.name}`} />
+                <a className="channel__go" href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">{t(c.action)}</a>
+                <CopyButton value={c.copy} label={t('número do {name}', { name: t(c.name) })} />
               </div>
             </li>
           ))}
         </ul>
         <p className="callout">
           <LuInfo size={20} aria-hidden="true" />
-          <span>O aviso por celular (Cell Broadcast) só chega em aparelhos 4G/5G. O SMS funciona em qualquer rede.</span>
+          <span>{t('O aviso por celular (Cell Broadcast) só chega em aparelhos 4G/5G. O SMS funciona em qualquer rede.')}</span>
         </p>
       </section>
       {!compact && (
       <section className="panel" aria-labelledby="t-enso">
-        <h2 id="t-enso">O El Niño agora</h2>
-        <p className="muted small">Declarado ativo pela NOAA em 11/06/2026</p>
+        <h2 id="t-enso">{t('O El Niño agora')}</h2>
+        <p className="muted small">{t('Declarado ativo pela NOAA em 11/06/2026')}</p>
         <dl className="dl">
-          <div><dt>Pico</dt><dd>Entre a primavera e o início do verão</dd></div>
-          <div><dt>Até quando</dt><dd>Pelo menos o início de 2027</dd></div>
+          <div><dt>{t('Pico')}</dt><dd>{t('Entre a primavera e o início do verão')}</dd></div>
+          <div><dt>{t('Até quando')}</dt><dd>{t('Pelo menos o início de 2027')}</dd></div>
         </dl>
       </section>
       )}

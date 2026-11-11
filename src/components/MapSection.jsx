@@ -3,6 +3,7 @@ import { lazyWithReload } from '../lib/lazy.js'
 import { LuMap, LuRefreshCw } from 'react-icons/lu'
 import { buildDemoMap, buildDemoRain, demoLevel, isExtremeDemo } from '../lib/demo.js'
 import { describeMap, fetchMapData, fetchRain, formatMm, summarizeAreas, summarizeRain } from '../lib/map.js'
+import { t, useLang } from '../lib/i18n.js'
 import AreaList from './AreaList.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 
@@ -10,6 +11,7 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 // e só quer o aviso nunca paga esse custo.
 const MapView = lazyWithReload(() => import('./MapView.jsx'))
 
+// Textos em português; a tradução é feita na hora de desenhar.
 const FILTERS = [
   ['todos', 'Todos'],
   ['hoje', 'Hoje'],
@@ -30,11 +32,12 @@ function Stat({ label, value, sub }) {
 }
 
 function areasSub(counts) {
-  const parts = ['vermelho', 'laranja', 'amarelo'].filter((level) => counts.by[level] > 0).map((level) => `${counts.by[level]} ${level}`)
-  return parts.length ? parts.join(' · ') : 'nenhum por perto'
+  const parts = ['vermelho', 'laranja', 'amarelo'].filter((level) => counts.by[level] > 0).map((level) => `${counts.by[level]} ${t(level)}`)
+  return parts.length ? parts.join(' · ') : t('nenhum por perto')
 }
 
 export default function MapSection({ place, demo = false }) {
+  useLang()
   // Na rota /teste/extremo o mapa já abre sozinho, para ver o cenário sem precisar procurar.
   const extreme = demo && isExtremeDemo()
   const [open, setOpen] = useState(extreme)
@@ -107,24 +110,24 @@ export default function MapSection({ place, demo = false }) {
 
   return (
     <section className="mapsec" id="mapa" ref={root} aria-labelledby="t-mapa">
-      <h2 id="t-mapa" className="section-title">Mapa dos avisos</h2>
+      <h2 id="t-mapa" className="section-title">{t('Mapa dos avisos')}</h2>
       {!open ? (
         <div className="mapsec__intro">
-          <p>Veja se o seu local está dentro de uma área de aviso, onde deve chover mais nas próximas 24 horas e onde há focos de calor por perto.</p>
+          <p>{t('Veja se o seu local está dentro de uma área de aviso, onde deve chover mais nas próximas 24 horas e onde há focos de calor por perto.')}</p>
           <button type="button" className="mapsec__open" onClick={() => setOpen(true)}>
-            <LuMap size={20} aria-hidden="true" /> Ver no mapa
+            <LuMap size={20} aria-hidden="true" /> {t('Ver no mapa')}
           </button>
         </div>
       ) : (
         <div className="mapsec__body">
-          {state.status === 'loading' && <p className="mapsec__status" role="status">Carregando o mapa…</p>}
+          {state.status === 'loading' && <p className="mapsec__status" role="status">{t('Carregando o mapa…')}</p>}
           {state.status === 'offline' && (
-            <p className="mapsec__status mapsec__status--warn" role="status">Sem internet: o mapa precisa de conexão. Os avisos e os cartões acima continuam valendo.</p>
+            <p className="mapsec__status mapsec__status--warn" role="status">{t('Sem internet: o mapa precisa de conexão. Os avisos e os cartões acima continuam valendo.')}</p>
           )}
           {state.status === 'error' && (
             <div className="mapsec__status mapsec__status--warn" role="alert">
-              <span>Não foi possível carregar o mapa agora.</span>
-              <button type="button" onClick={load}><LuRefreshCw size={16} aria-hidden="true" /> Tentar de novo</button>
+              <span>{t('Não foi possível carregar o mapa agora.')}</span>
+              <button type="button" onClick={load}><LuRefreshCw size={16} aria-hidden="true" /> {t('Tentar de novo')}</button>
             </div>
           )}
           {summary && (
@@ -132,19 +135,19 @@ export default function MapSection({ place, demo = false }) {
               <p className={`mapsec__headline${summary.level ? ` mapsec__headline--${summary.level}` : ''}`} role="status">{summary.headline}</p>
 
               <div className="mapstats">
-                <Stat label="Avisos por perto" value={counts.total} sub={areasSub(counts)} />
+                <Stat label={t('Avisos por perto')} value={counts.total} sub={areasSub(counts)} />
                 {rainSummary ? (
-                  <Stat label="Chuva em 24 h no seu local" value={formatMm(rainSummary.here)} sub={`até ${formatMm(rainSummary.max)} na região`} />
+                  <Stat label={t('Chuva em 24 h no seu local')} value={formatMm(rainSummary.here)} sub={t('até {value} na região', { value: formatMm(rainSummary.max) })} />
                 ) : (
-                  <Stat label="Chuva em 24 h" value="–" sub={rain.status === 'loading' ? 'carregando…' : 'indisponível agora'} />
+                  <Stat label={t('Chuva em 24 h')} value="–" sub={rain.status === 'loading' ? t('carregando…') : t('indisponível agora')} />
                 )}
-                {summary.firesCount != null && <Stat label="Focos de calor em 50 km" value={summary.firesCount} sub="INPE, hoje" />}
+                {summary.firesCount != null && <Stat label={t('Focos de calor em 50 km')} value={summary.firesCount} sub={t('INPE, hoje')} />}
               </div>
 
               {hasAnyAreas && (
-                <div className="mapfilter" role="group" aria-label="Período dos avisos">
+                <div className="mapfilter" role="group" aria-label={t('Período dos avisos')}>
                   {FILTERS.map(([key, label]) => (
-                    <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>
+                    <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}>{t(label)}</button>
                   ))}
                 </div>
               )}
@@ -154,23 +157,23 @@ export default function MapSection({ place, demo = false }) {
                   key={attempt}
                   fallback={(
                     <div className="mapsec__status mapsec__status--warn" role="alert">
-                      <span>Não foi possível mostrar o mapa agora. Os avisos e os cartões continuam valendo.</span>
-                      <button type="button" onClick={() => setAttempt((n) => n + 1)}><LuRefreshCw size={16} aria-hidden="true" /> Tentar de novo</button>
+                      <span>{t('Não foi possível mostrar o mapa agora. Os avisos e os cartões continuam valendo.')}</span>
+                      <button type="button" onClick={() => setAttempt((n) => n + 1)}><LuRefreshCw size={16} aria-hidden="true" /> {t('Tentar de novo')}</button>
                     </div>
                   )}
                 >
-                  <Suspense fallback={<p className="mapsec__status" role="status">Carregando o mapa…</p>}>
+                  <Suspense fallback={<p className="mapsec__status" role="status">{t('Carregando o mapa…')}</p>}>
                     <MapView place={place} data={data} rain={rainData} focus={focus} />
                   </Suspense>
                 </ErrorBoundary>
                 {!solo && (
                   <div className="mappanel__side">
-                    <h3 className="mappanel__title">Avisos por perto</h3>
-                    {areas ? <AreaList areas={areas} onFocus={(id) => setFocus({ id, n: Date.now() })} /> : <p className="arealist__empty">Não foi possível consultar as áreas de aviso agora.</p>}
+                    <h3 className="mappanel__title">{t('Avisos por perto')}</h3>
+                    {areas ? <AreaList areas={areas} onFocus={(id) => setFocus({ id, n: Date.now() })} /> : <p className="arealist__empty">{t('Não foi possível consultar as áreas de aviso agora.')}</p>}
                   </div>
                 )}
               </div>
-              <p className="mapsec__note">As áreas do INMET são aproximadas. Em caso de dúvida, confira o aviso oficial. Chuva prevista: Open-Meteo, modelo. Focos de calor: INPE, de hoje.</p>
+              <p className="mapsec__note">{t('As áreas do INMET são aproximadas. Em caso de dúvida, confira o aviso oficial. Chuva prevista: Open-Meteo, modelo. Focos de calor: INPE, de hoje.')}</p>
             </>
           )}
         </div>
